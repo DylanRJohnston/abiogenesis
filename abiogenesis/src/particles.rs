@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+
 use bevy::prelude::*;
 
 #[cfg(feature = "hot_reload")]
@@ -14,8 +16,13 @@ impl Plugin for ParticlePlugin {
         })
         .register_type::<SimulationParams>()
         .insert_resource(SimulationParams::DEFAULT)
+        .insert_resource(ParticleIndexes(Vec::with_capacity(1500)))
         .add_systems(Startup, spawn_particles)
         .add_observer(respawn_particles)
+        .add_systems(
+            Update,
+            cycle_particles.run_if(resource_exists::<ParticleIndexes>),
+        )
         .add_systems(
             Update,
             (zero_forces, compute_forces, move_particles).chain(),
@@ -99,11 +106,15 @@ fn spawn_particles(mut commands: Commands) {
     commands.trigger(Respawn);
 }
 
+#[derive(Debug, Reflect, Resource, Deref, DerefMut)]
+struct ParticleIndexes(Vec<Entity>);
+
 fn respawn_particles(
     _trigger: Trigger<Respawn>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    mut particle_indexes: ResMut<ParticleIndexes>,
     windows: Query<&Window>,
     particles: Query<Entity, With<Particle>>,
 ) -> Result {
@@ -119,47 +130,59 @@ fn respawn_particles(
     let green = materials.add(Color::from(GREEN));
     let blue = materials.add(Color::from(BLUE));
 
-    (0..500).for_each(|_| {
-        commands.spawn((
-            Particle,
-            Transform::from_xyz(
-                rand::random::<f32>() * width - width / 2.0,
-                rand::random::<f32>() * height - height / 2.0,
-                0.0,
-            ),
-            ParticleColour::Red,
-            Mesh2d(mesh.clone()),
-            MeshMaterial2d(red.clone()),
-        ));
-    });
+    let commands = RefCell::new(commands);
 
-    (0..500).for_each(|_| {
-        commands.spawn((
-            Particle,
-            Transform::from_xyz(
-                rand::random::<f32>() * width - width / 2.0,
-                rand::random::<f32>() * height - height / 2.0,
-                0.0,
-            ),
-            ParticleColour::Green,
-            Mesh2d(mesh.clone()),
-            MeshMaterial2d(green.clone()),
-        ));
-    });
-
-    (0..500).for_each(|_| {
-        commands.spawn((
-            Particle,
-            Transform::from_xyz(
-                rand::random::<f32>() * width - width / 2.0,
-                rand::random::<f32>() * height - height / 2.0,
-                0.0,
-            ),
-            ParticleColour::Blue,
-            Mesh2d(mesh.clone()),
-            MeshMaterial2d(blue.clone()),
-        ));
-    });
+    particle_indexes.clear();
+    (0..500)
+        .map(|_| {
+            commands
+                .borrow_mut()
+                .spawn((
+                    Particle,
+                    Transform::from_xyz(
+                        rand::random::<f32>() * width - width / 2.0,
+                        rand::random::<f32>() * height - height / 2.0,
+                        0.0,
+                    ),
+                    ParticleColour::Red,
+                    Mesh2d(mesh.clone()),
+                    MeshMaterial2d(red.clone()),
+                ))
+                .id()
+        })
+        .chain((0..500).map(|_| {
+            commands
+                .borrow_mut()
+                .spawn((
+                    Particle,
+                    Transform::from_xyz(
+                        rand::random::<f32>() * width - width / 2.0,
+                        rand::random::<f32>() * height - height / 2.0,
+                        0.0,
+                    ),
+                    ParticleColour::Green,
+                    Mesh2d(mesh.clone()),
+                    MeshMaterial2d(green.clone()),
+                ))
+                .id()
+        }))
+        .chain((0..500).map(|_| {
+            commands
+                .borrow_mut()
+                .spawn((
+                    Particle,
+                    Transform::from_xyz(
+                        rand::random::<f32>() * width - width / 2.0,
+                        rand::random::<f32>() * height - height / 2.0,
+                        0.0,
+                    ),
+                    ParticleColour::Blue,
+                    Mesh2d(mesh.clone()),
+                    MeshMaterial2d(blue.clone()),
+                ))
+                .id()
+        }))
+        .collect_into(&mut **particle_indexes);
 
     Ok(())
 }
@@ -311,6 +334,34 @@ fn influence(params: &SimulationParams, factor: f32, distance: f32) -> f32 {
             0.0,
         )
     }
+}
+
+#[cfg_attr(feature = "hot_reload", hot)]
+fn cycle_particles(
+    mut particles: Query<&mut Transform, With<Particle>>,
+    particle_indexes: Res<ParticleIndexes>,
+    window: Query<&Window>,
+    mut index: Local<usize>,
+) -> Result<()> {
+    let window = window.single()?;
+    let width = window.width();
+    let height = window.height();
+
+    let particle_index = particle_indexes.get(*index);
+    *index = (*index + 1) % particle_indexes.len();
+
+    let Some(particle_index) = particle_index else {
+        return Ok(());
+    };
+
+    let mut particle = particles.get_mut(*particle_index)?;
+    *particle = Transform::from_xyz(
+        rand::random::<f32>() * width - width / 2.0,
+        rand::random::<f32>() * height - height / 2.0,
+        0.0,
+    );
+
+    Ok(())
 }
 
 #[cfg(test)]

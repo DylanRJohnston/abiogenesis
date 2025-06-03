@@ -1,3 +1,4 @@
+#![feature(iter_collect_into)]
 use bevy::{asset::AssetMetaCheck, prelude::*};
 use bevy_tweening::TweeningPlugin;
 use particles::ParticlePlugin;
