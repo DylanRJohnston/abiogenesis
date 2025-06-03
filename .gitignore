@@ -1,0 +1,4 @@
+.direnv
+target
+site.zip
+*.DS_Store

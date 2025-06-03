@@ -1,0 +1,31 @@
+[package]
+name = "abiogenesis"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bevy = { version = "0.16" }
+rand = "0.8"
+log = { version = "0.4", features = [
+  "max_level_debug",
+  "release_max_level_warn",
+] }
+tracing = { version = "0.1", features = [
+  "max_level_debug",
+  "release_max_level_warn",
+] }
+bevy_simple_subsecond_system = { optional = true, git = "https://github.com/TheBevyFlock/bevy_simple_subsecond_system" }
+bevy-inspector-egui = { version = "0.31.0", optional = true }
+bevy_tweening = { version = "0.13.0", default-features = false, features = [
+  "bevy_ui",
+] }
+
+[lints.clippy]
+too_many_arguments = "allow"
+type_complexity = "allow"
+nonstandard_macro_braces = "warn"
+
+[features]
+default = ["dev_native"]
+dev_native = ["hot_reload"]
+hot_reload = ["dep:bevy_simple_subsecond_system"]

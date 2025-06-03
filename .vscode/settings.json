@@ -1,0 +1,6 @@
+{
+  "cSpell.words": ["Color", "Deband", "Subsecond", "Tonemapping"],
+  "rust-analyzer.procMacro.ignored": {
+    "bevy_simple_subsecond_system_macros": ["hot"]
+  }
+}
