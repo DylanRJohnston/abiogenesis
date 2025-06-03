@@ -1,32 +1,38 @@
 use std::cell::RefCell;
 
-use bevy::prelude::*;
+use bevy::{ecs::system::SystemParam, prelude::*};
 
 #[cfg(feature = "hot_reload")]
 use bevy_simple_subsecond_system::hot;
+use itertools::Itertools;
 
-use crate::math::remap;
+use crate::{math::remap, spatial_hash::SpatialHashGrid};
 
 pub struct ParticlePlugin;
+
+const PARTICLES_PER_COLOR: usize = 1000;
 
 impl Plugin for ParticlePlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Model {
-            weights: [[-0.5, -0.5, 0.5], [-0.5, -0.9, 0.6], [-0.6, -0.9, 0.8]],
+            weights: [[0.3, 0.4, 0.5], [0.7, -0.4, 0.3], [-0.5, 0.5, 0.0]],
         })
         .register_type::<SimulationParams>()
         .insert_resource(SimulationParams::DEFAULT)
-        .insert_resource(ParticleIndexes(Vec::with_capacity(1500)))
+        .insert_resource(ParticleIndexes(Vec::with_capacity(4 * PARTICLES_PER_COLOR)))
         .add_systems(Startup, spawn_particles)
-        .add_observer(respawn_particles)
         .add_systems(
-            Update,
-            cycle_particles.run_if(resource_exists::<ParticleIndexes>),
+            PreUpdate,
+            (|mut spatial_index: ResMut<SpatialIndex>, simulation_size: SimulationSize| {
+                spatial_index.update_bounds(Rect::from_center_size(
+                    Vec2::ZERO,
+                    simulation_size.dimensions(),
+                ));
+            }),
         )
-        .add_systems(
-            Update,
-            (zero_forces, compute_forces, move_particles).chain(),
-        );
+        .add_observer(respawn_particles)
+        .add_systems(Update, particle_decay)
+        .add_systems(Update, compute_forces);
     }
 }
 
@@ -36,11 +42,14 @@ pub enum ParticleColour {
     Red,
     Green,
     Blue,
+    Orange,
 }
 
 pub const RED: Color = Color::srgb_from_array([172.0 / 255.0, 40.0 / 255.0, 71.0 / 255.0]);
 pub const GREEN: Color = Color::srgb_from_array([90.0 / 255.0, 181.0 / 255.0, 82.0 / 255.0]);
 pub const BLUE: Color = Color::srgb_from_array([51.0 / 255.0, 136.0 / 255.0, 222.0 / 255.0]);
+// pub const ORANGE: Color = Color::srgb_from_array([233.0 / 255.0, 133.0 / 255.0, 55.0 / 255.0]);
+pub const ORANGE: Color = Color::srgb_from_array([233.0 / 255.0, 133.0 / 255.0, 55.0 / 255.0]);
 
 impl Into<Color> for ParticleColour {
     fn into(self) -> Color {
@@ -48,6 +57,7 @@ impl Into<Color> for ParticleColour {
             ParticleColour::Red => RED.into(),
             ParticleColour::Green => GREEN.into(),
             ParticleColour::Blue => BLUE.into(),
+            ParticleColour::Orange => ORANGE.into(),
         }
     }
 }
@@ -58,6 +68,7 @@ impl ParticleColour {
             ParticleColour::Red => 0,
             ParticleColour::Green => 1,
             ParticleColour::Blue => 2,
+            ParticleColour::Orange => 3,
         }
     }
 }
@@ -69,13 +80,10 @@ pub struct Model {
 }
 
 #[derive(Debug, Reflect, Component, Default, Clone, Copy, Deref, DerefMut)]
-struct Velocity(Vec2);
-
-#[derive(Debug, Reflect, Component, Default, Clone, Copy, Deref, DerefMut)]
-struct Force(Vec2);
+pub struct Velocity(Vec2);
 
 #[derive(Debug, Reflect, Component)]
-#[require(Transform, ParticleColour, Velocity, Force)]
+#[require(Transform, ParticleColour, Velocity)]
 pub struct Particle;
 
 #[derive(Debug, Reflect, Resource, Clone, Copy)]
@@ -88,13 +96,15 @@ pub struct SimulationParams {
     pub max_distance: f32,
 }
 
+const INTERACTION_RADIUS: f32 = 75.0;
+
 impl SimulationParams {
     const DEFAULT: Self = Self {
-        friction: 1.0,
-        force_factor: 60.0,
-        peak_attraction_radius: 2.0 * 150.0 / 3.0,
-        repulsion_radius: 150.0 / 3.0,
-        max_distance: 150.0,
+        friction: 2.0,
+        force_factor: 100.0,
+        peak_attraction_radius: 2.0 * INTERACTION_RADIUS / 3.0,
+        repulsion_radius: INTERACTION_RADIUS / 3.0,
+        max_distance: INTERACTION_RADIUS,
     };
 }
 
@@ -102,7 +112,11 @@ impl SimulationParams {
 pub struct Respawn;
 
 #[cfg_attr(feature = "hot_reload", hot)]
-fn spawn_particles(mut commands: Commands) {
+fn spawn_particles(mut commands: Commands, window: SimulationSize) {
+    commands.insert_resource(SpatialIndex(SpatialHashGrid::new(
+        Rect::from_center_size(Vec2::ZERO, window.dimensions()),
+        (10, 10),
+    )));
     commands.trigger(Respawn);
 }
 
@@ -115,25 +129,28 @@ fn respawn_particles(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut particle_indexes: ResMut<ParticleIndexes>,
-    windows: Query<&Window>,
+    simulation_size: SimulationSize,
     particles: Query<Entity, With<Particle>>,
 ) -> Result {
     particles
         .iter()
         .for_each(|entity| commands.entity(entity).despawn());
 
-    let window = windows.single()?;
-    let (width, height) = (window.width(), window.height());
-
-    let mesh = meshes.add(Circle::new(2.0));
+    let mesh = meshes.add(Circle::new(1.0));
     let red = materials.add(Color::from(RED));
     let green = materials.add(Color::from(GREEN));
     let blue = materials.add(Color::from(BLUE));
+    let orange = materials.add(Color::from(ORANGE));
 
     let commands = RefCell::new(commands);
 
+    let Vec2 {
+        x: width,
+        y: height,
+    } = simulation_size.dimensions();
+
     particle_indexes.clear();
-    (0..500)
+    (0..PARTICLES_PER_COLOR)
         .map(|_| {
             commands
                 .borrow_mut()
@@ -150,7 +167,7 @@ fn respawn_particles(
                 ))
                 .id()
         })
-        .chain((0..500).map(|_| {
+        .interleave((0..PARTICLES_PER_COLOR).map(|_| {
             commands
                 .borrow_mut()
                 .spawn((
@@ -166,7 +183,7 @@ fn respawn_particles(
                 ))
                 .id()
         }))
-        .chain((0..500).map(|_| {
+        .interleave((0..PARTICLES_PER_COLOR).map(|_| {
             commands
                 .borrow_mut()
                 .spawn((
@@ -182,6 +199,22 @@ fn respawn_particles(
                 ))
                 .id()
         }))
+        // .chain((0..PARTICLES_PER_COLOR).map(|_| {
+        //     commands
+        //         .borrow_mut()
+        //         .spawn((
+        //             Particle,
+        //             Transform::from_xyz(
+        //                 rand::random::<f32>() * width - width / 2.0,
+        //                 rand::random::<f32>() * height - height / 2.0,
+        //                 0.0,
+        //             ),
+        //             ParticleColour::Orange,
+        //             Mesh2d(mesh.clone()),
+        //             MeshMaterial2d(orange.clone()),
+        //         ))
+        //         .id()
+        // }))
         .collect_into(&mut **particle_indexes);
 
     Ok(())
@@ -222,93 +255,65 @@ fn toroidal_wrap(pos: Vec2, width: f32, height: f32) -> Vec2 {
     pos
 }
 
-fn zero_forces(mut forces: Query<&mut Force>) {
-    for mut force in forces.iter_mut() {
-        **force = Vec2::ZERO;
-    }
-}
-
-// #[cfg_attr(feature = "hot_reload", hot)]
-fn compute_forces(
-    mut particles: Query<(&Transform, &ParticleColour, &mut Force), With<Particle>>,
-    model: Res<Model>,
-    window: Query<&Window>,
-    params: Res<SimulationParams>,
-) -> Result<()> {
-    let model = *model;
-    let window = window.single()?;
-
-    let mut iter = particles.iter_combinations_mut();
-
-    while let Some(
-        [
-            (a_transform, a_color, mut a_force),
-            (b_transform, b_color, mut b_force),
-        ],
-    ) = iter.fetch_next()
-    {
-        let displacement = toroidal_displacement(
-            a_transform.translation.truncate(),
-            b_transform.translation.truncate(),
-            window.width(),
-            window.height(),
-        );
-
-        let distance = displacement.length();
-        let direction = displacement.normalize();
-
-        if distance > params.max_distance {
-            continue;
-        }
-
-        let a_influence = influence(
-            &params,
-            model.weights[a_color.index()][b_color.index()],
-            distance,
-        );
-
-        let b_influence = influence(
-            &params,
-            model.weights[b_color.index()][a_color.index()],
-            distance,
-        );
-
-        **a_force += direction * a_influence * params.force_factor;
-        **b_force -= direction * b_influence * params.force_factor;
-    }
-
-    Ok(())
-}
+#[derive(Debug, Resource, Deref, DerefMut)]
+pub struct SpatialIndex(SpatialHashGrid<(Entity, ParticleColour)>);
 
 #[cfg_attr(feature = "hot_reload", hot)]
-fn move_particles(
-    mut particles: Query<(&mut Transform, &mut Velocity, &Force), With<Particle>>,
-    time: Res<Time>,
-    window: Query<&Window>,
+fn compute_forces(
+    mut particles: Query<(Entity, &mut Transform, &mut Velocity, &ParticleColour), With<Particle>>,
+    mut spatial_index: ResMut<SpatialIndex>,
+    model: Res<Model>,
     params: Res<SimulationParams>,
+    simulation_size: SimulationSize,
+    time: Res<Time>,
 ) -> Result<()> {
-    let window = window.single()?;
-    let width = window.width();
-    let height = window.height();
+    let model = *model;
+    let Vec2 {
+        x: width,
+        y: height,
+    } = simulation_size.dimensions();
+
+    spatial_index.clear();
+    particles.iter().for_each(|(entity, transform, _, color)| {
+        spatial_index.insert(transform.translation.truncate(), (entity, *color));
+    });
 
     let dt = time.delta_secs();
     let friction_factor = (-params.friction * dt).exp();
 
     particles
-        .iter_mut()
-        .for_each(|(mut transform, mut velocity, force)| {
-            let mut new_velocity = **velocity + force.0 * dt;
-            new_velocity *= friction_factor;
-            new_velocity = new_velocity.clamp_length(0.0, 200.0);
+        .par_iter_mut()
+        .for_each(|(entity, mut transform, mut velocity, a_color)| {
+            let force = spatial_index
+                .query(transform.translation.truncate(), params.max_distance)
+                .filter(|(_, (it, _))| *it != entity)
+                .fold(Vec2::ZERO, |force, (b_position, (_, b_color))| {
+                    let displacement = toroidal_displacement(
+                        transform.translation.truncate(),
+                        b_position,
+                        width,
+                        height,
+                    );
 
-            let mut new_position =
-                // transform.translation.truncate() + (new_velocity + previous_velocity) * 0.5 * dt;
-                transform.translation.truncate() + new_velocity * dt;
+                    let influence = influence(
+                        &params,
+                        model.weights[a_color.index()][b_color.index()],
+                        displacement.length(),
+                    );
 
-            new_position = toroidal_wrap(new_position, width, height);
+                    force + displacement.normalize() * influence * params.force_factor
+                });
 
-            **velocity = new_velocity;
-            transform.translation = new_position.extend(0.0);
+            **velocity += force * dt;
+            **velocity *= friction_factor;
+            **velocity = velocity.clamp_length(0.0, 200.0);
+
+            transform.translation = toroidal_wrap(
+                transform.translation.truncate() + **velocity * dt,
+                width,
+                height,
+            )
+            .extend(0.0);
         });
 
     Ok(())
@@ -336,32 +341,60 @@ fn influence(params: &SimulationParams, factor: f32, distance: f32) -> f32 {
     }
 }
 
+const DECAY_PER_SECOND: f32 = 100.0;
+
 #[cfg_attr(feature = "hot_reload", hot)]
-fn cycle_particles(
-    mut particles: Query<&mut Transform, With<Particle>>,
+fn particle_decay(
+    mut particles: Query<(&mut Transform, &mut Velocity), With<Particle>>,
     particle_indexes: Res<ParticleIndexes>,
-    window: Query<&Window>,
+    simulation_size: SimulationSize,
+    time: Res<Time>,
     mut index: Local<usize>,
 ) -> Result<()> {
-    let window = window.single()?;
-    let width = window.width();
-    let height = window.height();
+    let Vec2 {
+        x: width,
+        y: height,
+    } = simulation_size.dimensions();
 
-    let particle_index = particle_indexes.get(*index);
-    *index = (*index + 1) % particle_indexes.len();
+    let mut count = 0;
+    while count < (DECAY_PER_SECOND * time.delta_secs()) as i32 {
+        count += 1;
 
-    let Some(particle_index) = particle_index else {
-        return Ok(());
-    };
+        let particle_index = particle_indexes.get(*index);
+        *index = (*index + 1) % particle_indexes.len();
 
-    let mut particle = particles.get_mut(*particle_index)?;
-    *particle = Transform::from_xyz(
-        rand::random::<f32>() * width - width / 2.0,
-        rand::random::<f32>() * height - height / 2.0,
-        0.0,
-    );
+        let Some(particle_index) = particle_index else {
+            return Ok(());
+        };
+
+        let (mut transform, mut velocity) = particles.get_mut(*particle_index)?;
+        transform.translation = Vec2::new(
+            rand::random::<f32>() * width - width / 2.0,
+            rand::random::<f32>() * height - height / 2.0,
+        )
+        .extend(0.0);
+
+        **velocity = Vec2::ZERO;
+    }
 
     Ok(())
+}
+
+#[derive(SystemParam)]
+pub struct SimulationSize<'w> {
+    window: Single<'w, &'static Window>,
+    // projection: Single<'w, &'static Projection>,
+}
+
+impl SimulationSize<'_> {
+    pub fn dimensions(&self) -> Vec2 {
+        let (width, height) = (self.window.width(), self.window.height());
+        // let Projection::Orthographic(OrthographicProjection { scale, ..}) = *self.projection else {
+        //     panic!("Projection is not orthographic");
+        // };
+
+        Vec2::new(width, height)
+    }
 }
 
 #[cfg(test)]

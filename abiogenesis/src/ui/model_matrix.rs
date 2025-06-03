@@ -8,7 +8,7 @@ use model_box::*;
 
 use crate::{
     math::remap,
-    particles::{BLUE, GREEN, Model, RED},
+    particles::{BLUE, GREEN, Model, ORANGE, RED},
 };
 
 #[cfg_attr(
@@ -36,7 +36,7 @@ pub fn update_model_matrix(
 }
 
 macro_rules! many_children {
-    ($($x:expr),*) => {
+    ($($x:expr),* $(,)?) => {
         Children::spawn(SpawnWith(|spawner: &mut ChildSpawner| {
             $(
                 spawner.spawn($x);
@@ -64,18 +64,27 @@ pub fn model_matrix() -> impl Bundle {
             circle(RED),
             circle(GREEN),
             circle(BLUE),
+            // circle(ORANGE),
             circle(RED),
             model_box(0, 0),
             model_box(1, 0),
             model_box(2, 0),
+            // model_box(3, 0),
             circle(GREEN),
             model_box(0, 1),
             model_box(1, 1),
             model_box(2, 1),
+            // model_box(3, 1),
             circle(BLUE),
             model_box(0, 2),
             model_box(1, 2),
-            model_box(2, 2)
+            model_box(2, 2),
+            // model_box(3, 2),
+            // circle(ORANGE),
+            // model_box(0, 3),
+            // model_box(1, 3),
+            // model_box(2, 3),
+            // model_box(3, 3),
         ),
     )
 }

@@ -26,6 +26,7 @@ dependencies = [
  "bevy-inspector-egui",
  "bevy_simple_subsecond_system",
  "bevy_tweening",
+ "itertools 0.14.0",
  "log",
  "rand 0.8.5",
  "tracing",

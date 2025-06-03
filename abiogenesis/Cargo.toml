@@ -19,6 +19,7 @@ bevy-inspector-egui = { version = "0.31.0", optional = true }
 bevy_tweening = { version = "0.13.0", default-features = false, features = [
   "bevy_ui",
 ] }
+itertools = "0.14.0"
 
 [lints.clippy]
 too_many_arguments = "allow"
@@ -27,5 +28,5 @@ nonstandard_macro_braces = "warn"
 
 [features]
 default = ["dev_native"]
-dev_native = ["hot_reload"]
+dev_native = ["hot_reload", "dep:bevy-inspector-egui"]
 hot_reload = ["dep:bevy_simple_subsecond_system"]

@@ -1,5 +1,8 @@
 #![feature(iter_collect_into)]
-use bevy::{asset::AssetMetaCheck, prelude::*};
+#![feature(coroutines)]
+#![feature(gen_blocks)]
+
+use bevy::{asset::AssetMetaCheck, prelude::*, window::WindowResolution};
 use bevy_tweening::TweeningPlugin;
 use particles::ParticlePlugin;
 use ui::UIPlugin;
@@ -10,6 +13,7 @@ use bevy_simple_subsecond_system::SimpleSubsecondPlugin;
 mod math;
 mod observe;
 mod particles;
+mod spatial_hash;
 mod ui;
 
 #[derive(SystemSet, Debug, Clone, Copy, Eq, PartialEq, Hash, PartialOrd, Ord)]
@@ -32,6 +36,7 @@ fn main() -> AppExit {
             .set(WindowPlugin {
                 primary_window: Window {
                     title: "Abiogenesis".into(),
+                    resolution: WindowResolution::new(1920.0, 1080.0),
                     fit_canvas_to_parent: true,
                     ..default()
                 }
@@ -39,7 +44,16 @@ fn main() -> AppExit {
                 ..default()
             }),
     )
-    .add_plugins(TweeningPlugin)
+    .add_plugins((
+        TweeningPlugin,
+        #[cfg(feature = "dev_native")]
+        (
+            bevy_inspector_egui::bevy_egui::EguiPlugin {
+                enable_multipass_for_primary_context: true,
+            },
+            bevy_inspector_egui::quick::WorldInspectorPlugin::new(),
+        ),
+    ))
     .insert_resource(ClearColor(CLEAR_COLOUR))
     .configure_sets(
         Update,
@@ -54,10 +68,26 @@ fn main() -> AppExit {
     app.run()
 }
 
-fn spawn_camera(mut commands: Commands) {
+#[cfg_attr(
+    feature = "hot_reload",
+    bevy_simple_subsecond_system::hot(rerun_on_hot_patch = true)
+)]
+fn spawn_camera(
+    mut commands: Commands,
+    #[cfg(feature = "hot_reload")] cameras: Query<Entity, With<Camera>>,
+) {
+    #[cfg(feature = "hot_reload")]
+    cameras
+        .iter()
+        .for_each(|camera| commands.entity(camera).despawn());
+
     commands.spawn((
         Name::from("Camera"),
         Camera2d,
+        Projection::Orthographic(OrthographicProjection {
+            scale: 1.0,
+            ..OrthographicProjection::default_2d()
+        }),
         Camera {
             // hdr: true,
             ..default()
