@@ -3,9 +3,9 @@ use bevy::prelude::*;
 use bevy_tweening::component_animator_system;
 
 use crate::{
+    camera::{drag_screen, zoom},
     observe::Observe,
     ui::{
-        camera_controls::{drag_screen, zoom},
         model_matrix::{model_matrix, update_model_matrix},
         randomise_button::randomise_button,
         reset_button::reset_button,
@@ -13,7 +13,6 @@ use crate::{
 };
 
 mod button;
-mod camera_controls;
 mod model_matrix;
 mod randomise_button;
 mod reset_button;

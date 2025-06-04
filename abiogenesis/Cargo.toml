@@ -29,5 +29,6 @@ nonstandard_macro_braces = "warn"
 
 [features]
 default = ["dev_native"]
-dev_native = ["hot_reload", "dep:bevy-inspector-egui"]
+dev_native = ["hot_reload", "egui"]
+egui = ["dep:bevy-inspector-egui"]
 hot_reload = ["dep:bevy_simple_subsecond_system"]

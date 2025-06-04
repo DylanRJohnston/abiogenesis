@@ -7,23 +7,30 @@ use bevy_tweening::TweeningPlugin;
 use particles::ParticlePlugin;
 use ui::UIPlugin;
 
+use crate::{camera::CameraPlugin, scenes::ScenePlugin};
+
+mod camera;
 mod math;
 mod observe;
 mod particles;
+mod scenes;
 mod spatial_hash;
 mod ui;
-
-#[derive(SystemSet, Debug, Clone, Copy, Eq, PartialEq, Hash, PartialOrd, Ord)]
-enum AppSystems {
-    RecordInput,
-    Update,
-}
 
 const CLEAR_COLOUR: Color = Color::srgb_from_array([44.0 / 255.0, 30.0 / 255.0, 49.0 / 255.0]);
 
 fn main() -> AppExit {
     let mut app = App::new();
 
+    // Bevy Plugins;
+    bevy_systems(&mut app);
+    third_party_systems(&mut app);
+    app_systems(&mut app);
+
+    app.run()
+}
+
+fn bevy_systems(app: &mut App) {
     app.add_plugins(
         DefaultPlugins
             .set(AssetPlugin {
@@ -41,53 +48,25 @@ fn main() -> AppExit {
                 ..default()
             }),
     )
-    .add_plugins((
+    .insert_resource(ClearColor(CLEAR_COLOUR));
+}
+
+fn third_party_systems(app: &mut App) {
+    app.add_plugins((
         TweeningPlugin,
-        #[cfg(feature = "dev_native")]
+        #[cfg(feature = "egui")]
         (
             bevy_inspector_egui::bevy_egui::EguiPlugin {
                 enable_multipass_for_primary_context: true,
             },
             bevy_inspector_egui::quick::WorldInspectorPlugin::new(),
         ),
-    ))
-    .insert_resource(ClearColor(CLEAR_COLOUR))
-    .configure_sets(
-        Update,
-        (AppSystems::RecordInput, AppSystems::Update).chain(),
-    )
-    .add_plugins((ParticlePlugin, UIPlugin))
-    .add_systems(Startup, spawn_camera);
+    ));
 
     #[cfg(feature = "hot_reload")]
     app.add_plugins(bevy_simple_subsecond_system::SimpleSubsecondPlugin::default());
-
-    app.run()
 }
 
-#[cfg_attr(
-    feature = "hot_reload",
-    bevy_simple_subsecond_system::hot(rerun_on_hot_patch = true)
-)]
-fn spawn_camera(
-    mut commands: Commands,
-    #[cfg(feature = "hot_reload")] cameras: Query<Entity, With<Camera>>,
-) {
-    #[cfg(feature = "hot_reload")]
-    cameras
-        .iter()
-        .for_each(|camera| commands.entity(camera).despawn());
-
-    commands.spawn((
-        Name::from("Camera"),
-        Camera2d,
-        Projection::Orthographic(OrthographicProjection {
-            scale: 1.0,
-            ..OrthographicProjection::default_2d()
-        }),
-        Camera { ..default() },
-        // Tonemapping::AcesFitted,
-        // Bloom::default(),
-        // DebandDither::Enabled,
-    ));
+fn app_systems(app: &mut App) {
+    app.add_plugins((ParticlePlugin, UIPlugin, ScenePlugin, CameraPlugin));
 }
