@@ -116,5 +116,5 @@ pub fn zoom(trigger: Trigger<Pointer<Scroll>>, mut projection: Single<&mut Proje
         return;
     };
 
-    project.scale = (project.scale - trigger.y * 0.01).clamp(MIN_ZOOM, MAX_ZOOM);
+    project.scale = (project.scale - trigger.y.clamp(-0.05, 0.05)).clamp(MIN_ZOOM, MAX_ZOOM);
 }

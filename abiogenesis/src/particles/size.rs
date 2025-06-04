@@ -18,9 +18,6 @@ pub struct SimulationSize<'w> {
 impl SimulationSize<'_> {
     pub fn dimensions(&self) -> Vec2 {
         let (width, height) = (self.window.width(), self.window.height());
-        // let Projection::Orthographic(OrthographicProjection { scale, ..}) = *self.projection else {
-        //     panic!("Projection is not orthographic");
-        // };
 
         Vec2::new(width, height)
     }
