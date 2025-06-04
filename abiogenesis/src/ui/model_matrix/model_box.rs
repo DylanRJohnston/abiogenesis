@@ -2,11 +2,9 @@ use std::time::Duration;
 
 use bevy::{prelude::*, window::SystemCursorIcon, winit::cursor::CursorIcon};
 
-#[cfg(feature = "hot_reload")]
-use bevy_simple_subsecond_system::prelude::*;
 use bevy_tweening::{Animator, Tween, lens::UiPositionLens};
 
-use crate::{observe::Observe, particles::Model};
+use crate::{observe::Observe, particles::model::Model};
 
 #[derive(Debug, Component, Clone, Copy, Reflect)]
 pub struct ModelIndex {
@@ -47,7 +45,7 @@ const SLIDER_SCALAR: f32 = 50.0;
 #[derive(Component, Reflect, Default, Clone, Copy, Deref, DerefMut)]
 struct DragStartValue(f32);
 
-#[cfg_attr(feature = "hot_reload", hot)]
+#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
 fn drag_start(
     trigger: Trigger<Pointer<DragStart>>,
     model: Res<Model>,
@@ -63,7 +61,7 @@ fn drag_start(
     ));
 }
 
-#[cfg_attr(feature = "hot_reload", hot)]
+#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
 fn drag(
     mut trigger: Trigger<Pointer<Drag>>,
     mut model: ResMut<Model>,
@@ -95,7 +93,7 @@ fn drag(
         .insert(CursorIcon::from(SystemCursorIcon::Grab));
 }
 
-#[cfg_attr(feature = "hot_reload", hot)]
+#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
 fn drag_end(
     trigger: Trigger<Pointer<DragEnd>>,
     window: Single<Entity, With<Window>>,
@@ -127,7 +125,7 @@ fn drag_end(
         .remove::<DragStartValue>();
 }
 
-#[cfg_attr(feature = "hot_reload", hot)]
+#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
 fn hover_end(
     _trigger: Trigger<Pointer<Out>>,
     window: Single<Entity, With<Window>>,
@@ -138,7 +136,7 @@ fn hover_end(
         .insert(CursorIcon::from(SystemCursorIcon::Default));
 }
 
-#[cfg_attr(feature = "hot_reload", hot)]
+#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
 fn hover_start(
     _trigger: Trigger<Pointer<Over>>,
     window: Single<Entity, With<Window>>,

@@ -1,5 +1,19 @@
 {
-  "cSpell.words": ["Color", "Deband", "Subsecond", "Tonemapping"],
+  "cSpell.words": [
+    "Color",
+    "Deband",
+    "hoverable",
+    "lerp",
+    "Pickable",
+    "Rect",
+    "Registrator",
+    "Respawn",
+    "Subsecond",
+    "Tonemapping",
+    "Torodial",
+    "tweening",
+    "winit"
+  ],
   "rust-analyzer.procMacro.ignored": {
     "bevy_simple_subsecond_system_macros": ["hot"]
   }

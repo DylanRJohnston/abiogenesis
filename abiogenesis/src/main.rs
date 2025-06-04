@@ -7,9 +7,6 @@ use bevy_tweening::TweeningPlugin;
 use particles::ParticlePlugin;
 use ui::UIPlugin;
 
-#[cfg(feature = "hot_reload")]
-use bevy_simple_subsecond_system::SimpleSubsecondPlugin;
-
 mod math;
 mod observe;
 mod particles;
@@ -63,7 +60,7 @@ fn main() -> AppExit {
     .add_systems(Startup, spawn_camera);
 
     #[cfg(feature = "hot_reload")]
-    app.add_plugins(SimpleSubsecondPlugin::default());
+    app.add_plugins(bevy_simple_subsecond_system::SimpleSubsecondPlugin::default());
 
     app.run()
 }
@@ -88,10 +85,7 @@ fn spawn_camera(
             scale: 1.0,
             ..OrthographicProjection::default_2d()
         }),
-        Camera {
-            // hdr: true,
-            ..default()
-        },
+        Camera { ..default() },
         // Tonemapping::AcesFitted,
         // Bloom::default(),
         // DebandDither::Enabled,

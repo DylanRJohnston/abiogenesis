@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{observe::Observe, particles::Respawn, ui::button::button_hover_states};
+use crate::{observe::Observe, particles::spawner::Respawn, ui::button::button_hover_states};
 
 pub fn reset_button() -> impl Bundle {
     (

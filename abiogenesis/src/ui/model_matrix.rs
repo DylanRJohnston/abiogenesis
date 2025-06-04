@@ -8,7 +8,7 @@ use model_box::*;
 
 use crate::{
     math::remap,
-    particles::{BLUE, GREEN, Model, ORANGE, RED},
+    particles::{colour::*, model::Model},
 };
 
 #[cfg_attr(

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{observe::Observe, particles::Model, ui::button::button_hover_states};
+use crate::{observe::Observe, particles::model::Randomise, ui::button::button_hover_states};
 
 pub fn randomise_button() -> impl Bundle {
     (
@@ -15,10 +15,6 @@ pub fn randomise_button() -> impl Bundle {
     )
 }
 
-fn randomise_model(_: Trigger<Pointer<Click>>, mut model: ResMut<Model>) {
-    model.weights.iter_mut().for_each(|row| {
-        row.iter_mut().for_each(|value| {
-            *value = rand::random::<f32>() * 2.0 - 1.0;
-        })
-    });
+fn randomise_model(_: Trigger<Pointer<Click>>, mut commands: Commands) {
+    commands.trigger(Randomise);
 }
