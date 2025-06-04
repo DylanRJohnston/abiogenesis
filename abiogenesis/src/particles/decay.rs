@@ -37,7 +37,14 @@ fn particle_decay(
     let mut count = 0;
     while count < (DECAY_PER_SECOND * SCHEDULE_INTERVAL) as i32 {
         let particle_index = particle_indexes.get(*index);
-        *index = (*index + 1) % particle_indexes.len();
+
+        match particle_indexes.len() {
+            0 => {
+                *index = 0;
+                return Ok(());
+            }
+            other => *index = (*index + 1) % other,
+        }
 
         let Some(particle_index) = particle_index else {
             return Ok(());

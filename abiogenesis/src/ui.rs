@@ -5,17 +5,18 @@ use bevy_tweening::component_animator_system;
 use crate::{
     camera::{drag_screen, select_follow_particle, zoom},
     observe::Observe,
+    particles::{
+        model::{ClearParticles, Randomise},
+        spawner::Respawn,
+    },
     ui::{
+        button::control_button,
         model_matrix::{model_matrix, update_model_matrix},
-        randomise_button::randomise_button,
-        reset_button::reset_button,
     },
 };
 
 mod button;
 mod model_matrix;
-mod randomise_button;
-mod reset_button;
 
 pub struct UIPlugin;
 
@@ -52,11 +53,21 @@ fn spawn_ui(
                 model_matrix(),
                 (
                     Node {
-                        width: Val::Percent(100.0),
-                        justify_content: JustifyContent::SpaceBetween,
+                        flex_direction: FlexDirection::Column,
+                        align_items: AlignItems::FlexStart,
                         ..default()
                     },
-                    children![reset_button(), randomise_button()]
+                    children![
+                        (
+                            control_button("RANDOMISE", Randomise),
+                            BorderRadius::top(Val::Px(8.0))
+                        ),
+                        control_button("RESPAWN", Respawn),
+                        (
+                            control_button("CLEAR", ClearParticles),
+                            BorderRadius::bottom(Val::Px(8.0)),
+                        ),
+                    ]
                 )
             ]
         )],

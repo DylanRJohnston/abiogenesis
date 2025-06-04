@@ -28,8 +28,8 @@ pub fn model_box(source: usize, target: usize) -> impl Bundle {
         },
         BackgroundColor(Color::default().with_alpha(0.5)),
         children![(
-            Text::new("0.0"),
-            TextFont::from_font_size(16.0),
+            Text::new("0"),
+            TextFont::from_font_size(24.0),
             Pickable::IGNORE,
         )],
         Observe::event(drag_start),

@@ -2,7 +2,10 @@
 #![feature(coroutines)]
 #![feature(gen_blocks)]
 
-use bevy::{asset::AssetMetaCheck, prelude::*, window::WindowResolution};
+use bevy::{
+    asset::{AssetMetaCheck, load_internal_binary_asset},
+    prelude::*,
+};
 use bevy_tweening::TweeningPlugin;
 use particles::ParticlePlugin;
 use ui::UIPlugin;
@@ -70,4 +73,11 @@ fn third_party_systems(app: &mut App) {
 
 fn app_systems(app: &mut App) {
     app.add_plugins((ParticlePlugin, UIPlugin, ScenePlugin, CameraPlugin));
+
+    load_internal_binary_asset!(
+        app,
+        TextFont::default().font,
+        "../assets/fonts/CreatoDisplay-Regular.otf",
+        |bytes: &[u8], _path: String| { Font::try_from_bytes(bytes.to_vec()).unwrap() }
+    );
 }

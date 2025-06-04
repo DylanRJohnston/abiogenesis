@@ -24,6 +24,22 @@ pub fn button_hover_states() -> impl Bundle {
                 *color = BackgroundColor(Color::WHITE.with_alpha(0.1));
             },
         ),
-        BackgroundColor(Color::WHITE.with_alpha(0.05)),
+        BackgroundColor(Color::WHITE.with_alpha(0.1)),
+    )
+}
+
+pub fn control_button(text: &str, event: impl Event + Copy) -> impl Bundle {
+    (
+        Node {
+            padding: UiRect::all(Val::Px(8.0)),
+            width: Val::Percent(100.0),
+            ..default()
+        },
+        Button,
+        children![(Text::new(text), Pickable::IGNORE)],
+        button_hover_states(),
+        Observe::event(move |_: Trigger<Pointer<Click>>, mut commands: Commands| {
+            commands.trigger(event);
+        }),
     )
 }

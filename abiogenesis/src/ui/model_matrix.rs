@@ -27,7 +27,7 @@ pub fn update_model_matrix(
     for (value, mut color, children) in elements.iter_mut() {
         let value = model[value.source][value.target];
 
-        **(text.get_mut(children[0]).unwrap()) = format!("{value:.1}");
+        **(text.get_mut(children[0]).unwrap()) = format!("{value:.0}", value = value * 10.0);
         *color = RED
             .mix(&GREEN, remap(value, -1.0, 1.0, 0.0, 1.0))
             .with_alpha(color.0.alpha())
@@ -67,17 +67,17 @@ pub fn model_matrix() -> impl Bundle {
             // circle(ORANGE),
             circle(RED),
             model_box(0, 0),
-            model_box(1, 0),
-            model_box(2, 0),
+            model_box(0, 1),
+            model_box(0, 2),
             // model_box(3, 0),
             circle(GREEN),
-            model_box(0, 1),
+            model_box(1, 0),
             model_box(1, 1),
-            model_box(2, 1),
+            model_box(1, 2),
             // model_box(3, 1),
             circle(BLUE),
-            model_box(0, 2),
-            model_box(1, 2),
+            model_box(2, 0),
+            model_box(2, 1),
             model_box(2, 2),
             // model_box(3, 2),
             // circle(ORANGE),

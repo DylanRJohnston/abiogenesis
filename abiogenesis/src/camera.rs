@@ -190,8 +190,12 @@ pub fn select_follow_particle(
 fn camera_follow_particle(
     follow_particle: Res<FollowParticle>,
     mut particles: Query<&mut Transform, With<Particle>>,
+    mut commands: Commands,
 ) {
-    let particle = particles.get(**follow_particle).unwrap().clone();
+    let Ok(&particle) = particles.get(**follow_particle) else {
+        commands.remove_resource::<FollowParticle>();
+        return;
+    };
 
     particles.iter_mut().for_each(|mut transform| {
         transform.translation -= particle.translation;
