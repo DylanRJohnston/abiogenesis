@@ -1,4 +1,4 @@
-use crate::particles::simulation::Particle;
+use crate::particles::{simulation::Particle, size::SimulationSize};
 use bevy::prelude::*;
 
 pub struct CameraPlugin;
@@ -6,7 +6,8 @@ pub struct CameraPlugin;
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_camera)
-            .add_systems(Update, touch_pan);
+            .add_systems(Update, touch_pan)
+            .add_systems(Update, rescale_zoom);
     }
 }
 
@@ -42,6 +43,7 @@ fn touch_pan(
     touches: Res<Touches>,
     mut particles: Query<&mut Transform, With<Particle>>,
     mut camera: Single<&mut Projection, With<Camera>>,
+    simulation_size: SimulationSize,
 ) {
     if !touches.is_changed() {
         return;
@@ -77,7 +79,9 @@ fn touch_pan(
         scale: Vec3::splat(1.0),
     };
 
-    project.scale = (project.scale * scale).clamp(MIN_ZOOM, MAX_ZOOM);
+    let (min_zoom, max_zoom) = simulation_size.scale_bounds();
+
+    project.scale = (project.scale * scale).clamp(min_zoom, max_zoom);
 
     particles.iter_mut().for_each(|mut particle| {
         particle.translation = transform.transform_point(particle.translation);
@@ -107,14 +111,25 @@ pub fn drag_screen(
     }
 }
 
-const MAX_ZOOM: f32 = 1.0;
-const MIN_ZOOM: f32 = 0.1;
-
 #[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
-pub fn zoom(trigger: Trigger<Pointer<Scroll>>, mut projection: Single<&mut Projection>) {
+pub fn zoom(
+    trigger: Trigger<Pointer<Scroll>>,
+    mut projection: Single<&mut Projection>,
+    simulation_size: SimulationSize,
+) {
     let Projection::Orthographic(ref mut project) = **projection else {
         return;
     };
 
-    project.scale = (project.scale - trigger.y.clamp(-0.05, 0.05)).clamp(MIN_ZOOM, MAX_ZOOM);
+    let (min_zoom, max_zoom) = simulation_size.scale_bounds();
+    project.scale = (project.scale - trigger.y.clamp(-0.05, 0.05)).clamp(min_zoom, max_zoom);
+}
+
+fn rescale_zoom(mut projection: Single<&mut Projection>, simulation_size: SimulationSize) {
+    let Projection::Orthographic(ref mut project) = **projection else {
+        return;
+    };
+
+    let (min_zoom, max_zoom) = simulation_size.scale_bounds();
+    project.scale = project.scale.clamp(min_zoom, max_zoom);
 }
