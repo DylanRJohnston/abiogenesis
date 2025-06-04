@@ -62,6 +62,15 @@
           mv site/index_bg.reduced.wasm site/index_bg.wasm   
           zip -r site.zip site
         '';
+
+        hot = pkgs.writeShellScriptBin "hot" ''
+          set -o errexit
+          set -o pipefail
+          set -o nounset
+          set -x
+
+          dx serve --hot-patch --package abiogenesis --no-default-features --features hot_reload  
+        '';
       in
       {
         packages.dioxus-cli = pkgs.dioxus-cli;
@@ -76,6 +85,7 @@
             pkgs.dioxus-cli
             pkgs.simple-http-server
             build-web
+            hot
           ];
 
           RUST_SRC_PATH = "${toolchain}/lib/rustlib/src/rust/library";

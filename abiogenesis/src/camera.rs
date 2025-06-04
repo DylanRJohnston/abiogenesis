@@ -5,7 +5,8 @@ pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_camera);
+        app.add_systems(Startup, spawn_camera)
+            .add_systems(Update, touch_pan);
     }
 }
 
@@ -37,11 +38,62 @@ fn spawn_camera(
 }
 
 #[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
+fn touch_pan(
+    touches: Res<Touches>,
+    mut particles: Query<&mut Transform, With<Particle>>,
+    mut camera: Single<&mut Projection, With<Camera>>,
+) {
+    if !touches.is_changed() {
+        return;
+    }
+
+    let Projection::Orthographic(ref mut project) = **camera else {
+        return;
+    };
+
+    let touches = touches.iter().collect::<Vec<_>>();
+    let [first, second] = touches.as_slice() else {
+        return;
+    };
+
+    // Compute the translation zoom and rotation from the delta of the two touches
+    let prev_center = (first.previous_position() + second.previous_position()) / 2.0;
+    let curr_center = (first.position() + second.position()) / 2.0;
+    let mut translation = curr_center - prev_center;
+    translation.y *= -1.0;
+
+    let prev_diff = second.previous_position() - first.previous_position();
+    let curr_diff = second.position() - first.position();
+
+    let scale = prev_diff.length() / curr_diff.length();
+
+    let prev_angle = prev_diff.y.atan2(prev_diff.x);
+    let curr_angle = curr_diff.y.atan2(curr_diff.x);
+    let rotation = curr_angle - prev_angle;
+
+    let transform = Transform {
+        translation: translation.extend(0.0) * project.scale,
+        rotation: Quat::from_rotation_z(-rotation),
+        scale: Vec3::splat(1.0),
+    };
+
+    project.scale = (project.scale * scale).clamp(MIN_ZOOM, MAX_ZOOM);
+
+    particles.iter_mut().for_each(|mut particle| {
+        particle.translation = transform.transform_point(particle.translation);
+    });
+}
+
+#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
 pub fn drag_screen(
     trigger: Trigger<Pointer<Drag>>,
     mut particles: Query<&mut Transform, With<Particle>>,
     projection: Single<&Projection>,
 ) {
+    if !matches!(trigger.button, PointerButton::Secondary) {
+        return;
+    }
+
     let Projection::Orthographic(ref project) = **projection else {
         return;
     };

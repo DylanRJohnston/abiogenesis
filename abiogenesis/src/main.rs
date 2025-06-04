@@ -40,7 +40,8 @@ fn bevy_systems(app: &mut App) {
             .set(WindowPlugin {
                 primary_window: Window {
                     title: "Abiogenesis".into(),
-                    resolution: WindowResolution::new(1920.0, 1080.0),
+                    // #[cfg(not(target_arch = "wasm32"))]
+                    // resolution: WindowResolution::new(1920.0, 1080.0),
                     fit_canvas_to_parent: true,
                     ..default()
                 }
