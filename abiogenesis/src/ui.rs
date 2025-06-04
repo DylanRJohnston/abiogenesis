@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy_tweening::component_animator_system;
 
 use crate::{
-    camera::{drag_screen, zoom},
+    camera::{drag_screen, select_follow_particle, zoom},
     observe::Observe,
     ui::{
         model_matrix::{model_matrix, update_model_matrix},
@@ -74,6 +74,7 @@ fn full_screen_container() -> impl Bundle {
         },
         Observe::event(drag_screen),
         Observe::event(zoom),
+        Observe::event(select_follow_particle),
     )
 }
 

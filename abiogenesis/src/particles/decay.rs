@@ -1,9 +1,13 @@
 use bevy::prelude::*;
 
-use crate::particles::{
-    simulation::{Particle, Velocity},
-    size::SimulationSize,
-    spawner::ParticleIndexes,
+use crate::{
+    camera::FollowParticle,
+    particles::{
+        simulation::{Particle, Velocity},
+        size::SimulationSize,
+        spatial_index::SpatialIndex,
+        spawner::ParticleIndexes,
+    },
 };
 
 const DECAY_PER_SECOND: f32 = 100.0;
@@ -23,6 +27,7 @@ fn particle_decay(
     particle_indexes: Res<ParticleIndexes>,
     simulation_size: SimulationSize,
     mut index: Local<usize>,
+    follow_particle: Option<Res<FollowParticle>>,
 ) -> Result<()> {
     let Vec2 {
         x: width,
@@ -31,14 +36,18 @@ fn particle_decay(
 
     let mut count = 0;
     while count < (DECAY_PER_SECOND * SCHEDULE_INTERVAL) as i32 {
-        count += 1;
-
         let particle_index = particle_indexes.get(*index);
         *index = (*index + 1) % particle_indexes.len();
 
         let Some(particle_index) = particle_index else {
             return Ok(());
         };
+
+        if let Some(ref follow_particle) = follow_particle {
+            if *particle_index == ***follow_particle {
+                continue;
+            }
+        }
 
         let (mut transform, mut velocity) = particles.get_mut(*particle_index)?;
         transform.translation = Vec2::new(
@@ -48,6 +57,8 @@ fn particle_decay(
         .extend(0.0);
 
         **velocity = Vec2::ZERO;
+
+        count += 1;
     }
 
     Ok(())

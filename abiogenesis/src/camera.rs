@@ -1,4 +1,10 @@
-use crate::particles::{simulation::Particle, size::SimulationSize};
+use std::cmp::Ordering;
+
+use crate::particles::{
+    simulation::Particle,
+    size::SimulationSize,
+    spatial_index::{self, SpatialIndex},
+};
 use bevy::prelude::*;
 
 pub struct CameraPlugin;
@@ -7,7 +13,11 @@ impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_camera)
             .add_systems(Update, touch_pan)
-            .add_systems(Update, rescale_zoom);
+            .add_systems(Update, rescale_zoom)
+            .add_systems(
+                Update,
+                camera_follow_particle.run_if(resource_exists::<FollowParticle>),
+            );
     }
 }
 
@@ -132,4 +142,58 @@ fn rescale_zoom(mut projection: Single<&mut Projection>, simulation_size: Simula
 
     let (min_zoom, max_zoom) = simulation_size.scale_bounds();
     project.scale = project.scale.clamp(min_zoom, max_zoom);
+}
+
+#[derive(Debug, Resource, Deref, DerefMut)]
+pub struct FollowParticle(Entity);
+
+#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
+pub fn select_follow_particle(
+    trigger: Trigger<Pointer<Click>>,
+    spatial_index: Res<SpatialIndex>,
+    camera: Single<(&Camera, &GlobalTransform)>,
+    follow_particle: Option<Res<FollowParticle>>,
+    mut commands: Commands,
+) {
+    if !matches!(trigger.button, PointerButton::Primary) {
+        return;
+    }
+
+    if follow_particle.is_some() {
+        commands.remove_resource::<FollowParticle>();
+        return;
+    }
+
+    let (camera, camera_transform) = *camera;
+
+    let Ok(pointer_location) =
+        camera.viewport_to_world_2d(camera_transform, trigger.pointer_location.position)
+    else {
+        return;
+    };
+
+    let Some((_, (entity, _))) =
+        spatial_index
+            .query(pointer_location, 25.0)
+            .min_by(|(a, _), (b, _)| {
+                a.distance_squared(pointer_location)
+                    .partial_cmp(&b.distance_squared(pointer_location))
+                    .unwrap_or(Ordering::Equal)
+            })
+    else {
+        return;
+    };
+
+    commands.insert_resource(FollowParticle(*entity));
+}
+
+fn camera_follow_particle(
+    follow_particle: Res<FollowParticle>,
+    mut particles: Query<&mut Transform, With<Particle>>,
+) {
+    let particle = particles.get(**follow_particle).unwrap().clone();
+
+    particles.iter_mut().for_each(|mut transform| {
+        transform.translation -= particle.translation;
+    });
 }
