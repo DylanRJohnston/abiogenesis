@@ -30,10 +30,10 @@ impl Plugin for UIPlugin {
 #[derive(Debug, Component, Reflect)]
 struct UIRoot;
 
-// #[cfg_attr(
-//     feature = "hot_reload",
-//     bevy_simple_subsecond_system::hot(rerun_on_hot_patch = true)
-// )]
+#[cfg_attr(
+    feature = "hot_reload",
+    bevy_simple_subsecond_system::hot(rerun_on_hot_patch = true)
+)]
 fn spawn_ui(
     mut commands: Commands,
     #[cfg(feature = "hot_reload")] roots: Query<Entity, With<UIRoot>>,
@@ -47,6 +47,7 @@ fn spawn_ui(
         full_screen_container(),
         children![(
             sidebar(),
+            prevent_event_propagation(),
             children![
                 model_matrix(),
                 (
@@ -60,6 +61,10 @@ fn spawn_ui(
             ]
         )],
     ));
+}
+
+fn prevent_event_propagation() -> impl Bundle {
+    Observe::event(|mut trigger: Trigger<Pointer<Click>>| trigger.propagate(false))
 }
 
 fn full_screen_container() -> impl Bundle {

@@ -72,8 +72,9 @@
           dx serve --hot-patch --package abiogenesis --no-default-features --features hot_reload  
         '';
       in
-      {
+      rec {
         packages.dioxus-cli = pkgs.dioxus-cli;
+        defaultPackage = devShell;
 
         devShell = pkgs.mkShell {
           buildInputs = [
