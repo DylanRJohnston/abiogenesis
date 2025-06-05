@@ -1,9 +1,9 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, window::WindowResized};
 
 use bevy_tweening::component_animator_system;
 
 use crate::{
-    camera, controls,
+    controls,
     observe::Observe,
     particles::{
         model::{ClearParticles, Randomise},
@@ -22,10 +22,57 @@ pub struct UIPlugin;
 
 impl Plugin for UIPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_ui)
+        app.add_systems(Startup, (detect_layout, respawn_ui).chain())
             .add_systems(Update, update_model_matrix)
-            .add_systems(Update, component_animator_system::<Node>);
+            .add_systems(Update, component_animator_system::<Node>)
+            .add_systems(Update, on_window_resized);
     }
+}
+
+#[derive(Debug, Event, Resource, Reflect, PartialEq, Eq, Copy, Clone)]
+enum Layout {
+    Horizontal,
+    Vertical,
+}
+
+impl Layout {
+    fn flex_direction(&self) -> FlexDirection {
+        match self {
+            Layout::Horizontal => FlexDirection::Row,
+            Layout::Vertical => FlexDirection::Column,
+        }
+    }
+}
+
+fn decide_layout(width: f32, height: f32) -> Layout {
+    if width > height {
+        Layout::Vertical
+    } else {
+        Layout::Horizontal
+    }
+}
+
+fn detect_layout(window: Single<&Window>, mut commands: Commands) {
+    commands.insert_resource(decide_layout(window.width(), window.height()));
+}
+
+fn on_window_resized(
+    window: Single<&Window>,
+    mut resize_reader: EventReader<WindowResized>,
+    mut layout: ResMut<Layout>,
+    mut commands: Commands,
+) {
+    if resize_reader.read().count() == 0 {
+        return;
+    }
+
+    let new_layout = decide_layout(window.width(), window.height());
+    if new_layout == *layout {
+        return;
+    }
+
+    *layout = new_layout;
+    commands.run_system_cached(respawn_ui);
 }
 
 #[derive(Debug, Component, Reflect)]
@@ -35,27 +82,20 @@ struct UIRoot;
     feature = "hot_reload",
     bevy_simple_subsecond_system::hot(rerun_on_hot_patch = true)
 )]
-fn spawn_ui(
+fn respawn_ui(
     mut commands: Commands,
     icons: Res<AssetServer>,
-    window: Single<&Window>,
-    #[cfg(feature = "hot_reload")] roots: Query<Entity, With<UIRoot>>,
+    layout: Res<Layout>,
+    roots: Query<Entity, With<UIRoot>>,
 ) {
-    #[cfg(feature = "hot_reload")]
     roots
         .iter()
         .for_each(|entity| commands.entity(entity).despawn());
 
-    let direction = if window.width() > window.height() {
-        FlexDirection::Column
-    } else {
-        FlexDirection::Row
-    };
-
     commands.spawn((
         full_screen_container(),
         children![(
-            sidebar(direction),
+            sidebar(*layout),
             prevent_event_propagation(),
             children![
                 model_matrix(),
@@ -99,11 +139,11 @@ fn full_screen_container() -> impl Bundle {
     )
 }
 
-fn sidebar(direction: FlexDirection) -> impl Bundle {
+fn sidebar(direction: Layout) -> impl Bundle {
     Node {
         padding: UiRect::all(Val::Px(8.0)),
         display: Display::Flex,
-        flex_direction: direction,
+        flex_direction: direction.flex_direction(),
         justify_content: JustifyContent::SpaceBetween,
         align_items: AlignItems::End,
         row_gap: Val::Px(16.0),
