@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-#[derive(Debug, Reflect, Component, Default, Clone, Copy)]
+#[derive(Debug, Reflect, Component, Default, Clone, Copy, PartialEq, Eq)]
 pub enum ParticleColour {
     #[default]
     Red,
@@ -22,6 +22,17 @@ impl Into<Color> for ParticleColour {
             ParticleColour::Green => GREEN.into(),
             ParticleColour::Blue => BLUE.into(),
             ParticleColour::Orange => ORANGE.into(),
+        }
+    }
+}
+
+impl std::fmt::Display for ParticleColour {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ParticleColour::Red => write!(f, "Red"),
+            ParticleColour::Green => write!(f, "Green"),
+            ParticleColour::Blue => write!(f, "Blue"),
+            ParticleColour::Orange => write!(f, "Orange"),
         }
     }
 }

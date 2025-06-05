@@ -5,7 +5,6 @@ use crate::{
     particles::{
         simulation::{Particle, Velocity},
         size::SimulationSize,
-        spatial_index::SpatialIndex,
         spawner::ParticleIndexes,
     },
 };

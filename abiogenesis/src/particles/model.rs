@@ -2,14 +2,39 @@ use bevy::prelude::*;
 
 use crate::particles::{simulation::Particle, spawner::ParticleIndexes};
 
+pub const PRESETS: [(&str, Model); 4] = [
+    (
+        "MANTARAY",
+        Model {
+            weights: [[0.3, 0.4, 0.5], [0.7, -0.4, 0.3], [-0.5, 0.5, 0.0]],
+        },
+    ),
+    (
+        "LIFECYCLE",
+        Model {
+            weights: [[-0.2, 0.2, 0.8], [0.0, 0.7, 0.3], [0.6, 0.3, -0.5]],
+        },
+    ),
+    (
+        "SNAKE",
+        Model {
+            weights: [[-0.8, 0.7, 0.7], [0.7, -0.8, 0.7], [0.3, 0.7, -0.8]],
+        },
+    ),
+    (
+        "BLANK",
+        Model {
+            weights: [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+        },
+    ),
+];
+
 pub struct ModelPlugin;
 impl Plugin for ModelPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(Model {
-            weights: [[0.3, 0.4, 0.5], [0.7, -0.4, 0.3], [-0.5, 0.5, 0.0]],
-        })
-        .add_observer(randomise_model)
-        .add_observer(clear_particles);
+        app.insert_resource(PRESETS[0].1)
+            .add_observer(randomise_model)
+            .add_observer(clear_particles);
     }
 }
 

@@ -6,7 +6,10 @@ mod model_box;
 use circle::*;
 use model_box::*;
 
-use crate::particles::{colour::*, model::Model};
+use crate::particles::{
+    colour::{ParticleColour::*, *},
+    model::Model,
+};
 
 #[cfg_attr(
     feature = "hot_reload",
@@ -17,12 +20,8 @@ pub fn update_model_matrix(
     mut text: Query<&mut Text>,
     model: Res<Model>,
 ) {
-    // if !model.is_changed() {
-    //     return;
-    // }
-
     for (value, mut color, children) in elements.iter_mut() {
-        let value = model[value.source][value.target];
+        let value = model[value.source.index()][value.target.index()];
 
         **(text.get_mut(children[0]).unwrap()) = format!("{value:.0}", value = value * 10.0);
 
@@ -71,27 +70,24 @@ pub fn model_matrix() -> impl Bundle {
             circle(RED),
             circle(GREEN),
             circle(BLUE),
-            // circle(ORANGE),
             circle(RED),
-            (model_box(0, 0), BorderRadius::top_left(Val::Px(8.0))),
-            model_box(0, 1),
-            (model_box(0, 2), BorderRadius::top_right(Val::Px(8.0))),
-            // model_box(3, 0),
+            (model_box(Red, Red), BorderRadius::top_left(Val::Px(8.0))),
+            model_box(Red, Green),
+            (model_box(Red, Blue), BorderRadius::top_right(Val::Px(8.0))),
             circle(GREEN),
-            model_box(1, 0),
-            model_box(1, 1),
-            model_box(1, 2),
-            // model_box(3, 1),
+            model_box(Green, Red),
+            model_box(Green, Green),
+            model_box(Green, Blue),
             circle(BLUE),
-            (model_box(2, 0), BorderRadius::bottom_left(Val::Px(8.0))),
-            model_box(2, 1),
-            (model_box(2, 2), BorderRadius::bottom_right(Val::Px(8.0))),
-            // model_box(3, 2),
-            // circle(ORANGE),
-            // model_box(0, 3),
-            // model_box(1, 3),
-            // model_box(2, 3),
-            // model_box(3, 3),
+            (
+                model_box(Blue, Red),
+                BorderRadius::bottom_left(Val::Px(8.0))
+            ),
+            model_box(Blue, Green),
+            (
+                model_box(Blue, Blue),
+                BorderRadius::bottom_right(Val::Px(8.0))
+            ),
         ),
     )
 }

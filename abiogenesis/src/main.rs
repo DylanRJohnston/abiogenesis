@@ -59,7 +59,7 @@ fn bevy_systems(app: &mut App) {
     )
     .insert_resource(ClearColor(CLEAR_COLOUR));
 
-    #[cfg(debug_assertions)]
+    #[cfg(all(debug_assertions, not(feature = "hot_reload")))]
     app.edit_schedule(Update, |schedule| {
         schedule.set_build_settings(ScheduleBuildSettings {
             ambiguity_detection: LogLevel::Warn,

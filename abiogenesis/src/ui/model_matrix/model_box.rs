@@ -4,15 +4,25 @@ use bevy::{prelude::*, window::SystemCursorIcon, winit::cursor::CursorIcon};
 
 use bevy_tweening::{Animator, Tween, lens::UiPositionLens};
 
-use crate::{observe::Observe, particles::model::Model};
+use crate::{
+    observe::Observe,
+    particles::{colour::ParticleColour, model::Model},
+    ui::tooltip::tooltip,
+};
 
 #[derive(Debug, Component, Clone, Copy, Reflect)]
 pub struct ModelIndex {
-    pub source: usize,
-    pub target: usize,
+    pub source: ParticleColour,
+    pub target: ParticleColour,
 }
 
-pub fn model_box(source: usize, target: usize) -> impl Bundle {
+pub fn model_box(source: ParticleColour, target: ParticleColour) -> impl Bundle {
+    let text = if source == target {
+        format!("{source}'s attraction to itself")
+    } else {
+        format!("{source}'s attraction to {target}")
+    };
+
     (
         ModelIndex { source, target },
         Node {
@@ -31,6 +41,7 @@ pub fn model_box(source: usize, target: usize) -> impl Bundle {
             TextFont::from_font_size(24.0),
             Pickable::IGNORE,
         )],
+        tooltip(text),
         Observe::event(drag_start),
         Observe::event(drag),
         Observe::event(drag_end),
@@ -56,13 +67,13 @@ fn drag_start(
     };
 
     commands.entity(trigger.target).insert(DragStartValue(
-        SLIDER_SCALAR * model[index.source][index.target],
+        SLIDER_SCALAR * model[index.source.index()][index.target.index()],
     ));
 }
 
 #[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
 fn drag(
-    mut trigger: Trigger<Pointer<Drag>>,
+    trigger: Trigger<Pointer<Drag>>,
     mut model: ResMut<Model>,
     mut nodes: Query<(
         &ModelIndex,
@@ -73,8 +84,6 @@ fn drag(
     mut commands: Commands,
     window: Single<Entity, With<Window>>,
 ) {
-    // trigger.propagate(false);
-
     let Ok((index, start_value, mut node, mut color)) = nodes.get_mut(trigger.target) else {
         return;
     };
@@ -84,7 +93,7 @@ fn drag(
 
     color.0 = color.0.with_alpha(1.0);
     node.left = Val::Px(trigger.distance.x.clamp(lower_bound, upper_bound));
-    model[index.source][index.target] =
+    model[index.source.index()][index.target.index()] =
         ((**start_value + trigger.distance.x) / SLIDER_SCALAR).clamp(-1.0, 1.0);
 
     commands

@@ -1,7 +1,5 @@
 use bevy::{prelude::*, window::WindowResized};
 
-use bevy_tweening::{AnimationSystem, component_animator_system};
-
 use crate::{
     controls,
     observe::Observe,
@@ -12,12 +10,15 @@ use crate::{
     systems::AppSystems,
     ui::{
         button::control_button,
+        dropdown::preset_dropdown,
         model_matrix::{model_matrix, update_model_matrix},
     },
 };
 
 mod button;
+mod dropdown;
 mod model_matrix;
+mod tooltip;
 
 pub struct UIPlugin;
 
@@ -103,15 +104,38 @@ fn respawn_ui(
                     Node {
                         width: Val::Percent(100.0),
                         flex_direction: FlexDirection::Column,
-                        align_items: AlignItems::FlexStart,
+                        align_items: AlignItems::End,
                         row_gap: Val::Px(8.0),
                         column_gap: Val::Px(8.0),
                         ..default()
                     },
                     children![
-                        control_button("RANDOMISE", Randomise, icons.load("icons/shuffle.png")),
-                        control_button("RESPAWN", Respawn, icons.load("icons/reload.png")),
-                        control_button("CLEAR", ClearParticles, icons.load("icons/clear.png")),
+                        (
+                            Node {
+                                width: Val::Percent(100.0),
+                                justify_content: JustifyContent::SpaceBetween,
+                                column_gap: Val::Px(8.0),
+                                ..default()
+                            },
+                            children![
+                                control_button(
+                                    "Clear all cells",
+                                    ClearParticles,
+                                    icons.load("icons/clear.png")
+                                ),
+                                control_button(
+                                    "Reset cell positions",
+                                    Respawn,
+                                    icons.load("icons/reload.png")
+                                ),
+                                control_button(
+                                    "Randomise inter-cell forces",
+                                    Randomise,
+                                    icons.load("icons/shuffle.png")
+                                ),
+                            ]
+                        ),
+                        preset_dropdown(0, icons.load("icons/dropdown.png"))
                     ]
                 )
             ]
@@ -145,7 +169,7 @@ fn sidebar(direction: Layout) -> impl Bundle {
         display: Display::Flex,
         flex_direction: direction.flex_direction(),
         justify_content: JustifyContent::SpaceBetween,
-        align_items: AlignItems::End,
+        align_items: AlignItems::Start,
         row_gap: Val::Px(16.0),
         column_gap: Val::Px(16.0),
         ..default()

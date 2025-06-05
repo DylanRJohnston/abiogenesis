@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::observe::Observe;
+use crate::{observe::Observe, ui::tooltip::tooltip};
 
 pub fn button_hover_states() -> impl Bundle {
     (
@@ -24,24 +24,27 @@ pub fn button_hover_states() -> impl Bundle {
                 *color = BackgroundColor(Color::WHITE.with_alpha(0.1));
             },
         ),
-        BackgroundColor(Color::WHITE.with_alpha(0.2)),
+        BackgroundColor(Color::WHITE.with_alpha(0.1)),
     )
 }
 
-pub fn control_button(text: &str, event: impl Event + Copy, icon: Handle<Image>) -> impl Bundle {
+pub fn control_button(
+    text: &'static str,
+    event: impl Event + Copy,
+    icon: Handle<Image>,
+) -> impl Bundle {
     (
         Node {
-            padding: UiRect::all(Val::Px(8.0)),
-            width: Val::Percent(100.0),
-            justify_content: JustifyContent::SpaceBetween,
-            column_gap: Val::Px(8.0),
+            padding: UiRect::axes(Val::Px(12.0), Val::Px(8.0)),
+            // width: Val::Percent(100.0),
+            justify_content: JustifyContent::Center,
             ..default()
         },
         Button,
-        BorderRadius::all(Val::Px(8.0)),
+        BorderRadius::all(Val::Px(16.0)),
         Pickable::default(),
         children![
-            (Text::new(text), Pickable::IGNORE),
+            // (Text::new(text), Pickable::IGNORE),
             (
                 Node {
                     width: Val::Px(25.0),
@@ -57,6 +60,7 @@ pub fn control_button(text: &str, event: impl Event + Copy, icon: Handle<Image>)
             ),
         ],
         button_hover_states(),
+        tooltip(text),
         Observe::event(move |_: Trigger<Pointer<Click>>, mut commands: Commands| {
             commands.trigger(event);
         }),
