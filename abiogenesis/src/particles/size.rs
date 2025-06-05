@@ -1,11 +1,11 @@
 use bevy::{ecs::system::SystemParam, prelude::*};
 
-use crate::particles::spatial_index::SpatialIndex;
+use crate::{particles::spatial_index::SpatialIndex, systems::AppSystems};
 
 pub struct SimulationSizePlugin;
 impl Plugin for SimulationSizePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, resize_simulation);
+        app.add_systems(Update, resize_simulation.in_set(AppSystems::RecordInput));
     }
 }
 

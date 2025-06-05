@@ -17,9 +17,9 @@ pub fn update_model_matrix(
     mut text: Query<&mut Text>,
     model: Res<Model>,
 ) {
-    if !model.is_changed() {
-        return;
-    }
+    // if !model.is_changed() {
+    //     return;
+    // }
 
     for (value, mut color, children) in elements.iter_mut() {
         let value = model[value.source][value.target];

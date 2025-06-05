@@ -1,4 +1,7 @@
-use crate::particles::{simulation::Particle, size::SimulationSize};
+use crate::{
+    particles::{simulation::Particle, size::SimulationSize},
+    systems::AppSystems,
+};
 use bevy::prelude::*;
 
 pub struct CameraPlugin;
@@ -6,10 +9,12 @@ pub struct CameraPlugin;
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_camera)
-            .add_systems(Update, clamp_camera_zoom)
+            .add_systems(Update, clamp_camera_zoom.in_set(AppSystems::Camera))
             .add_systems(
                 Update,
-                camera_follow_particle.run_if(resource_exists::<FollowParticle>),
+                camera_follow_particle
+                    .run_if(resource_exists::<FollowParticle>)
+                    .in_set(AppSystems::Camera),
             );
     }
 }

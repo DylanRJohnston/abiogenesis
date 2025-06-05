@@ -1,6 +1,6 @@
 use bevy::{prelude::*, window::WindowResized};
 
-use bevy_tweening::component_animator_system;
+use bevy_tweening::{AnimationSystem, component_animator_system};
 
 use crate::{
     controls,
@@ -9,6 +9,7 @@ use crate::{
         model::{ClearParticles, Randomise},
         spawner::Respawn,
     },
+    systems::AppSystems,
     ui::{
         button::control_button,
         model_matrix::{model_matrix, update_model_matrix},
@@ -23,8 +24,7 @@ pub struct UIPlugin;
 impl Plugin for UIPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, (detect_layout, respawn_ui).chain())
-            .add_systems(Update, update_model_matrix)
-            .add_systems(Update, component_animator_system::<Node>)
+            .add_systems(Update, update_model_matrix.in_set(AppSystems::Update))
             .add_systems(Update, on_window_resized);
     }
 }

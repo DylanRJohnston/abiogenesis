@@ -5,16 +5,21 @@ use bevy::prelude::*;
 use crate::{
     camera::FollowParticle,
     particles::{simulation::Particle, size::SimulationSize, spatial_index::SpatialIndex},
+    systems::AppSystems,
 };
 
 pub struct ControlsPlugin;
 
 impl Plugin for ControlsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, touch_pan).add_systems(
-            Update,
-            touch_registration_timeout.run_if(resource_exists::<TouchRegistrationTimeout>),
-        );
+        app.add_systems(Update, touch_pan.in_set(AppSystems::RecordInput))
+            .add_systems(
+                Update,
+                touch_registration_timeout
+                    .run_if(resource_exists::<TouchRegistrationTimeout>)
+                    .in_set(AppSystems::RecordInput)
+                    .after(touch_pan),
+            );
     }
 }
 

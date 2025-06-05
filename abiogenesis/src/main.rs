@@ -4,13 +4,16 @@
 
 use bevy::{
     asset::{AssetMetaCheck, load_internal_binary_asset},
+    ecs::schedule::{LogLevel, ScheduleBuildSettings},
     prelude::*,
 };
-use bevy_tweening::TweeningPlugin;
+use bevy_tweening::{AnimationSystem, TweeningPlugin};
 use particles::ParticlePlugin;
 use ui::UIPlugin;
 
-use crate::{camera::CameraPlugin, controls::ControlsPlugin, scenes::ScenePlugin};
+use crate::{
+    camera::CameraPlugin, controls::ControlsPlugin, scenes::ScenePlugin, systems::AppSystems,
+};
 
 mod camera;
 mod controls;
@@ -19,6 +22,7 @@ mod observe;
 mod particles;
 mod scenes;
 mod spatial_hash;
+mod systems;
 mod ui;
 
 const CLEAR_COLOUR: Color = Color::srgb_from_array([44.0 / 255.0, 30.0 / 255.0, 49.0 / 255.0]);
@@ -54,6 +58,14 @@ fn bevy_systems(app: &mut App) {
             }),
     )
     .insert_resource(ClearColor(CLEAR_COLOUR));
+
+    #[cfg(debug_assertions)]
+    app.edit_schedule(Update, |schedule| {
+        schedule.set_build_settings(ScheduleBuildSettings {
+            ambiguity_detection: LogLevel::Warn,
+            ..default()
+        });
+    });
 }
 
 fn third_party_systems(app: &mut App) {
@@ -80,6 +92,18 @@ fn app_systems(app: &mut App) {
         CameraPlugin,
         ControlsPlugin,
     ));
+
+    app.configure_sets(
+        Update,
+        (
+            AppSystems::TickTimers,
+            AnimationSystem::AnimationUpdate,
+            AppSystems::RecordInput,
+            AppSystems::Update,
+            AppSystems::Camera,
+        )
+            .chain(),
+    );
 
     load_internal_binary_asset!(
         app,
