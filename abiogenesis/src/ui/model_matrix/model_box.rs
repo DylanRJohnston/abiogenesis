@@ -16,8 +16,7 @@ pub fn model_box(source: usize, target: usize) -> impl Bundle {
     (
         ModelIndex { source, target },
         Node {
-            width: Val::Percent(100.0),
-            height: Val::Percent(100.0),
+            padding: UiRect::all(Val::Px(8.0)),
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
             ..default()
@@ -74,7 +73,7 @@ fn drag(
     mut commands: Commands,
     window: Single<Entity, With<Window>>,
 ) {
-    trigger.propagate(false);
+    // trigger.propagate(false);
 
     let Ok((index, start_value, mut node, mut color)) = nodes.get_mut(trigger.target) else {
         return;
@@ -129,20 +128,34 @@ fn drag_end(
 fn hover_end(
     _trigger: Trigger<Pointer<Out>>,
     window: Single<Entity, With<Window>>,
+    mut background_color: Query<&mut BackgroundColor>,
     mut commands: Commands,
 ) {
     commands
         .entity(*window)
         .insert(CursorIcon::from(SystemCursorIcon::Default));
+
+    let Ok(mut background_color) = background_color.get_mut(_trigger.target) else {
+        return;
+    };
+
+    background_color.0 = background_color.0.with_alpha(0.5);
 }
 
 #[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
 fn hover_start(
     _trigger: Trigger<Pointer<Over>>,
     window: Single<Entity, With<Window>>,
+    mut background_color: Query<&mut BackgroundColor>,
     mut commands: Commands,
 ) {
     commands
         .entity(*window)
         .insert(CursorIcon::from(SystemCursorIcon::Grab));
+
+    let Ok(mut background_color) = background_color.get_mut(_trigger.target) else {
+        return;
+    };
+
+    background_color.0 = background_color.0.with_alpha(0.8);
 }

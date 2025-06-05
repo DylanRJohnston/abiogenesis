@@ -10,9 +10,10 @@ use bevy_tweening::TweeningPlugin;
 use particles::ParticlePlugin;
 use ui::UIPlugin;
 
-use crate::{camera::CameraPlugin, scenes::ScenePlugin};
+use crate::{camera::CameraPlugin, controls::ControlsPlugin, scenes::ScenePlugin};
 
 mod camera;
+mod controls;
 mod math;
 mod observe;
 mod particles;
@@ -72,7 +73,13 @@ fn third_party_systems(app: &mut App) {
 }
 
 fn app_systems(app: &mut App) {
-    app.add_plugins((ParticlePlugin, UIPlugin, ScenePlugin, CameraPlugin));
+    app.add_plugins((
+        ParticlePlugin,
+        UIPlugin,
+        ScenePlugin,
+        CameraPlugin,
+        ControlsPlugin,
+    ));
 
     load_internal_binary_asset!(
         app,

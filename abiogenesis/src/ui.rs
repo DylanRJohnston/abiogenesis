@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy_tweening::component_animator_system;
 
 use crate::{
-    camera::{drag_screen, select_follow_particle, zoom},
+    camera, controls,
     observe::Observe,
     particles::{
         model::{ClearParticles, Randomise},
@@ -37,6 +37,8 @@ struct UIRoot;
 )]
 fn spawn_ui(
     mut commands: Commands,
+    icons: Res<AssetServer>,
+    window: Single<&Window>,
     #[cfg(feature = "hot_reload")] roots: Query<Entity, With<UIRoot>>,
 ) {
     #[cfg(feature = "hot_reload")]
@@ -44,29 +46,32 @@ fn spawn_ui(
         .iter()
         .for_each(|entity| commands.entity(entity).despawn());
 
+    let direction = if window.width() > window.height() {
+        FlexDirection::Column
+    } else {
+        FlexDirection::Row
+    };
+
     commands.spawn((
         full_screen_container(),
         children![(
-            sidebar(),
+            sidebar(direction),
             prevent_event_propagation(),
             children![
                 model_matrix(),
                 (
                     Node {
+                        width: Val::Percent(100.0),
                         flex_direction: FlexDirection::Column,
                         align_items: AlignItems::FlexStart,
+                        row_gap: Val::Px(8.0),
+                        column_gap: Val::Px(8.0),
                         ..default()
                     },
                     children![
-                        (
-                            control_button("RANDOMISE", Randomise),
-                            BorderRadius::top(Val::Px(8.0))
-                        ),
-                        control_button("RESPAWN", Respawn),
-                        (
-                            control_button("CLEAR", ClearParticles),
-                            BorderRadius::bottom(Val::Px(8.0)),
-                        ),
+                        control_button("RANDOMISE", Randomise, icons.load("icons/shuffle.png")),
+                        control_button("RESPAWN", Respawn, icons.load("icons/reload.png")),
+                        control_button("CLEAR", ClearParticles, icons.load("icons/clear.png")),
                     ]
                 )
             ]
@@ -88,20 +93,21 @@ fn full_screen_container() -> impl Bundle {
             align_items: AlignItems::Start,
             ..default()
         },
-        Observe::event(drag_screen),
-        Observe::event(zoom),
-        Observe::event(select_follow_particle),
+        Observe::event(controls::drag_screen),
+        Observe::event(controls::scroll_wheel_zoom),
+        Observe::event(controls::select_follow_particle),
     )
 }
 
-fn sidebar() -> impl Bundle {
+fn sidebar(direction: FlexDirection) -> impl Bundle {
     Node {
-        padding: UiRect::all(Val::Px(16.0)),
+        padding: UiRect::all(Val::Px(8.0)),
         display: Display::Flex,
-        flex_direction: FlexDirection::Column,
-        justify_content: JustifyContent::Start,
-        align_items: AlignItems::Start,
-        row_gap: Val::Px(8.0),
+        flex_direction: direction,
+        justify_content: JustifyContent::SpaceBetween,
+        align_items: AlignItems::End,
+        row_gap: Val::Px(16.0),
+        column_gap: Val::Px(16.0),
         ..default()
     }
 }
