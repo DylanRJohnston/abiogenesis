@@ -1,32 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{observe::Observe, ui::tooltip::tooltip};
-
-pub fn button_hover_states() -> impl Bundle {
-    (
-        Observe::event(
-            |event: Trigger<Pointer<Over>>,
-             mut background_color: Query<&mut BackgroundColor, With<Button>>| {
-                let Ok(mut color) = background_color.get_mut(event.target) else {
-                    return;
-                };
-
-                *color = BackgroundColor(Color::WHITE.with_alpha(0.2));
-            },
-        ),
-        Observe::event(
-            |event: Trigger<Pointer<Out>>,
-             mut background_color: Query<&mut BackgroundColor, With<Button>>| {
-                let Ok(mut color) = background_color.get_mut(event.target) else {
-                    return;
-                };
-
-                *color = BackgroundColor(Color::WHITE.with_alpha(0.1));
-            },
-        ),
-        BackgroundColor(Color::WHITE.with_alpha(0.1)),
-    )
-}
+use crate::{observe::observe, ui::mixins};
 
 pub fn control_button(
     text: &'static str,
@@ -59,9 +33,9 @@ pub fn control_button(
                 Pickable::IGNORE
             ),
         ],
-        button_hover_states(),
-        tooltip(text),
-        Observe::event(move |_: Trigger<Pointer<Click>>, mut commands: Commands| {
+        mixins::hover_colour(Color::WHITE.with_alpha(0.1), Color::WHITE.with_alpha(0.2)),
+        mixins::tooltip(text),
+        observe(move |_: Trigger<Pointer<Click>>, mut commands: Commands| {
             commands.trigger(event);
         }),
     )

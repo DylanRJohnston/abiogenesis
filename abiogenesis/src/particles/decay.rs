@@ -3,13 +3,12 @@ use bevy::prelude::*;
 use crate::{
     camera::FollowParticle,
     particles::{
-        simulation::{Particle, Velocity},
+        simulation::{Particle, SimulationParams, Velocity},
         size::SimulationSize,
         spawner::ParticleIndexes,
     },
 };
 
-const DECAY_PER_SECOND: f32 = 100.0;
 const SCHEDULE_INTERVAL: f32 = 0.1;
 
 pub struct DecayPlugin;
@@ -27,6 +26,7 @@ fn particle_decay(
     simulation_size: SimulationSize,
     mut index: Local<usize>,
     follow_particle: Option<Res<FollowParticle>>,
+    params: Res<SimulationParams>,
 ) -> Result<()> {
     let Vec2 {
         x: width,
@@ -34,7 +34,7 @@ fn particle_decay(
     } = simulation_size.dimensions();
 
     let mut count = 0;
-    while count < (DECAY_PER_SECOND * SCHEDULE_INTERVAL) as i32 {
+    while count < (params.decay_rate * SCHEDULE_INTERVAL) as i32 {
         let particle_index = particle_indexes.get(*index);
 
         match particle_indexes.len() {

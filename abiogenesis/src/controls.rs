@@ -112,6 +112,8 @@ pub fn select_follow_particle(
     touch_registration_timeout: Option<ResMut<TouchRegistrationTimeout>>,
     mut commands: Commands,
 ) {
+    tracing::info!("select_follow_particle");
+
     if !matches!(trigger.button, PointerButton::Primary) {
         return;
     }

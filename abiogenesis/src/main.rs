@@ -1,10 +1,10 @@
 #![feature(iter_collect_into)]
 #![feature(coroutines)]
 #![feature(gen_blocks)]
+#![feature(trait_alias)]
 
 use bevy::{
     asset::{AssetMetaCheck, load_internal_binary_asset},
-    ecs::schedule::{LogLevel, ScheduleBuildSettings},
     prelude::*,
 };
 use bevy_tweening::{AnimationSystem, TweeningPlugin};
@@ -15,6 +15,7 @@ use crate::{
     camera::CameraPlugin, controls::ControlsPlugin, scenes::ScenePlugin, systems::AppSystems,
 };
 
+mod bundle_fn;
 mod camera;
 mod controls;
 mod math;
@@ -47,7 +48,7 @@ fn bevy_systems(app: &mut App) {
             })
             .set(WindowPlugin {
                 primary_window: Window {
-                    title: "Abiogenesis".into(),
+                    title: "ABIOGENESIS".into(),
                     // #[cfg(not(target_arch = "wasm32"))]
                     // resolution: WindowResolution::new(1920.0, 1080.0),
                     fit_canvas_to_parent: true,

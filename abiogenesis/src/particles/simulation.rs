@@ -3,7 +3,10 @@ use bevy::prelude::*;
 use crate::{
     math::{TorodialMath, remap},
     particles::{
-        colour::ParticleColour, model::Model, size::SimulationSize, spatial_index::SpatialIndex,
+        colour::ParticleColour,
+        model::{Model, PRESETS},
+        size::SimulationSize,
+        spatial_index::SpatialIndex,
     },
     systems::AppSystems,
 };
@@ -12,7 +15,7 @@ pub struct SimulationPlugin;
 impl Plugin for SimulationPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<SimulationParams>()
-            .insert_resource(SimulationParams::DEFAULT)
+            .insert_resource(PRESETS[0].2)
             .add_systems(Update, compute_forces.in_set(AppSystems::Update));
     }
 }
@@ -31,18 +34,20 @@ pub struct SimulationParams {
     pub force_strength: f32,
     pub peak_attraction_radius: f32,
     pub repulsion_radius: f32,
-    pub max_distance: f32,
+    pub attraction_radius: f32,
+    pub decay_rate: f32,
 }
 
 const INTERACTION_RADIUS: f32 = 75.0;
 
 impl SimulationParams {
-    const DEFAULT: Self = Self {
+    pub const DEFAULT: Self = Self {
         friction: 2.0,
         force_strength: 100.0,
         peak_attraction_radius: 2.0 * INTERACTION_RADIUS / 3.0,
         repulsion_radius: INTERACTION_RADIUS / 3.0,
-        max_distance: INTERACTION_RADIUS,
+        attraction_radius: INTERACTION_RADIUS,
+        decay_rate: 100.0,
     };
 }
 
@@ -74,7 +79,7 @@ fn compute_forces(
 
     iter.for_each(|(entity, mut transform, mut velocity, a_color)| {
         let force = spatial_index
-            .query(transform.translation.truncate(), params.max_distance)
+            .query(transform.translation.truncate(), params.attraction_radius)
             .filter(|(_, (it, _))| *it != entity)
             .map(|(b_position, (_, b_color))| {
                 let displacement =
@@ -117,7 +122,7 @@ fn magnitude(params: &SimulationParams, factor: f32, distance: f32) -> f32 {
         remap(
             distance,
             params.peak_attraction_radius,
-            params.max_distance,
+            params.attraction_radius,
             factor,
             0.0,
         )
@@ -263,7 +268,7 @@ mod test {
                         1.0,
                         lerp(
                             SimulationParams::DEFAULT.peak_attraction_radius,
-                            SimulationParams::DEFAULT.max_distance,
+                            SimulationParams::DEFAULT.attraction_radius,
                             0.5
                         )
                     ),
@@ -275,7 +280,7 @@ mod test {
                     1.0,
                     lerp(
                         SimulationParams::DEFAULT.peak_attraction_radius,
-                        SimulationParams::DEFAULT.max_distance,
+                        SimulationParams::DEFAULT.attraction_radius,
                         0.5
                     )
                 )

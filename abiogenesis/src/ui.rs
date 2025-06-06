@@ -2,7 +2,7 @@ use bevy::{prelude::*, window::WindowResized};
 
 use crate::{
     controls,
-    observe::Observe,
+    observe::observe,
     particles::{
         model::{ClearParticles, Randomise},
         spawner::Respawn,
@@ -10,15 +10,20 @@ use crate::{
     systems::AppSystems,
     ui::{
         button::control_button,
-        dropdown::preset_dropdown,
+        examples::examples,
         model_matrix::{model_matrix, update_model_matrix},
+        parameters::parameters,
     },
 };
 
 mod button;
 mod dropdown;
+mod examples;
+mod icon;
+mod mixins;
 mod model_matrix;
-mod tooltip;
+mod parameters;
+mod slider;
 
 pub struct UIPlugin;
 
@@ -133,9 +138,10 @@ fn respawn_ui(
                                     Randomise,
                                     icons.load("icons/shuffle.png")
                                 ),
-                            ]
+                            ],
                         ),
-                        preset_dropdown(0, icons.load("icons/dropdown.png"))
+                        parameters(),
+                        examples()
                     ]
                 )
             ]
@@ -144,7 +150,7 @@ fn respawn_ui(
 }
 
 fn prevent_event_propagation() -> impl Bundle {
-    Observe::event(|mut trigger: Trigger<Pointer<Click>>| trigger.propagate(false))
+    observe(|mut trigger: Trigger<Pointer<Click>>| trigger.propagate(false))
 }
 
 fn full_screen_container() -> impl Bundle {
@@ -157,9 +163,9 @@ fn full_screen_container() -> impl Bundle {
             align_items: AlignItems::Start,
             ..default()
         },
-        Observe::event(controls::drag_screen),
-        Observe::event(controls::scroll_wheel_zoom),
-        Observe::event(controls::select_follow_particle),
+        observe(controls::drag_screen),
+        observe(controls::scroll_wheel_zoom),
+        observe(controls::select_follow_particle),
     )
 }
 

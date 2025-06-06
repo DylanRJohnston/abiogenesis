@@ -5,9 +5,9 @@ use bevy::{prelude::*, window::SystemCursorIcon, winit::cursor::CursorIcon};
 use bevy_tweening::{Animator, Tween, lens::UiPositionLens};
 
 use crate::{
-    observe::Observe,
+    observe::observe,
     particles::{colour::ParticleColour, model::Model},
-    ui::tooltip::tooltip,
+    ui::mixins,
 };
 
 #[derive(Debug, Component, Clone, Copy, Reflect)]
@@ -35,18 +35,20 @@ pub fn model_box(source: ParticleColour, target: ParticleColour) -> impl Bundle 
             should_block_lower: true,
             is_hoverable: true,
         },
-        BackgroundColor(Color::default().with_alpha(0.5)),
         children![(
             Text::new("0"),
             TextFont::from_font_size(24.0),
             Pickable::IGNORE,
         )],
-        tooltip(text),
-        Observe::event(drag_start),
-        Observe::event(drag),
-        Observe::event(drag_end),
-        Observe::event(hover_start),
-        Observe::event(hover_end),
+        mixins::tooltip(text),
+        observe(drag_start),
+        observe(drag),
+        observe(drag_end),
+        mixins::cursor_grab_icon(),
+        mixins::hover_colour(
+            Color::default().with_alpha(0.5),
+            Color::default().with_alpha(0.8),
+        ),
     )
 }
 
@@ -131,40 +133,4 @@ fn drag_end(
         .entity(trigger.target)
         .insert(Animator::new(tween))
         .remove::<DragStartValue>();
-}
-
-#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
-fn hover_end(
-    _trigger: Trigger<Pointer<Out>>,
-    window: Single<Entity, With<Window>>,
-    mut background_color: Query<&mut BackgroundColor>,
-    mut commands: Commands,
-) {
-    commands
-        .entity(*window)
-        .insert(CursorIcon::from(SystemCursorIcon::Default));
-
-    let Ok(mut background_color) = background_color.get_mut(_trigger.target) else {
-        return;
-    };
-
-    background_color.0 = background_color.0.with_alpha(0.5);
-}
-
-#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
-fn hover_start(
-    _trigger: Trigger<Pointer<Over>>,
-    window: Single<Entity, With<Window>>,
-    mut background_color: Query<&mut BackgroundColor>,
-    mut commands: Commands,
-) {
-    commands
-        .entity(*window)
-        .insert(CursorIcon::from(SystemCursorIcon::Grab));
-
-    let Ok(mut background_color) = background_color.get_mut(_trigger.target) else {
-        return;
-    };
-
-    background_color.0 = background_color.0.with_alpha(0.8);
 }
