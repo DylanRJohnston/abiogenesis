@@ -11,6 +11,7 @@ pub fn circle(color: ParticleColour) -> impl Bundle {
             ..default()
         },
         BorderRadius::all(Val::Percent(50.0)),
+        BorderColor(Color::from(color).with_alpha(0.5)),
         BackgroundColor(Color::from(color).with_alpha(0.5)),
     )
 }

@@ -31,4 +31,5 @@ nonstandard_macro_braces = "warn"
 default = ["dev_native"]
 dev_native = ["hot_reload", "egui"]
 egui = ["dep:bevy-inspector-egui"]
+debug_ui = ["bevy/bevy_ui_debug"]
 hot_reload = ["dep:bevy_simple_subsecond_system"]

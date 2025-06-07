@@ -6,3 +6,6 @@ pub use hover_colour::mixin as hover_colour;
 
 mod tooltip;
 pub use tooltip::tooltip;
+
+mod block_all_interactions;
+pub use block_all_interactions::mixin as block_all_interactions;

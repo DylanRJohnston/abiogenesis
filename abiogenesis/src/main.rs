@@ -6,6 +6,7 @@
 use bevy::{
     asset::{AssetMetaCheck, load_internal_binary_asset},
     prelude::*,
+    ui::UiPlugin,
 };
 use bevy_tweening::{AnimationSystem, TweeningPlugin};
 use particles::ParticlePlugin;
@@ -60,6 +61,12 @@ fn bevy_systems(app: &mut App) {
     )
     .insert_resource(ClearColor(CLEAR_COLOUR));
 
+    #[cfg(feature = "debug_ui")]
+    app.insert_resource(UiDebugOptions {
+        enabled: true,
+        ..default()
+    });
+
     #[cfg(all(debug_assertions, not(feature = "hot_reload")))]
     app.edit_schedule(Update, |schedule| {
         schedule.set_build_settings(ScheduleBuildSettings {
@@ -109,7 +116,7 @@ fn app_systems(app: &mut App) {
     load_internal_binary_asset!(
         app,
         TextFont::default().font,
-        "../assets/fonts/CreatoDisplay-Regular.otf",
+        "../assets/fonts/CreatoDisplay-Bold.otf",
         |bytes: &[u8], _path: String| { Font::try_from_bytes(bytes.to_vec()).unwrap() }
     );
 }

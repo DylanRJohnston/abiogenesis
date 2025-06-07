@@ -3,9 +3,11 @@ use bevy::prelude::*;
 use crate::{
     camera::FollowParticle,
     particles::{
-        simulation::{Particle, SimulationParams, Velocity},
+        colour::ParticleColour,
+        particle::{ParticleIndex, Velocity},
+        simulation::SimulationParams,
         size::SimulationSize,
-        spawner::ParticleIndexes,
+        spawner::{OldestParticle, ParticleAssets},
     },
 };
 
@@ -21,12 +23,13 @@ impl Plugin for DecayPlugin {
 
 #[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
 fn particle_decay(
-    mut particles: Query<(&mut Transform, &mut Velocity), With<Particle>>,
-    particle_indexes: Res<ParticleIndexes>,
+    particle_indexes: Res<ParticleIndex>,
     simulation_size: SimulationSize,
-    mut index: Local<usize>,
+    mut oldest_particle: ResMut<OldestParticle>,
     follow_particle: Option<Res<FollowParticle>>,
     params: Res<SimulationParams>,
+    mut commands: Commands,
+    particle_assets: Res<ParticleAssets>,
 ) -> Result<()> {
     let Vec2 {
         x: width,
@@ -35,34 +38,40 @@ fn particle_decay(
 
     let mut count = 0;
     while count < (params.decay_rate * SCHEDULE_INTERVAL) as i32 {
-        let particle_index = particle_indexes.get(*index);
+        let particle_index = particle_indexes.get(**oldest_particle);
 
         match particle_indexes.len() {
             0 => {
-                *index = 0;
+                **oldest_particle = 0;
                 return Ok(());
             }
-            other => *index = (*index + 1) % other,
+            num_particles => **oldest_particle = (**oldest_particle + 1) % num_particles,
         }
 
-        let Some(particle_index) = particle_index else {
+        let Some(&particle_index) = particle_index else {
             return Ok(());
         };
 
         if let Some(ref follow_particle) = follow_particle {
-            if *particle_index == ***follow_particle {
+            if particle_index == ***follow_particle {
                 continue;
             }
         }
 
-        let (mut transform, mut velocity) = particles.get_mut(*particle_index)?;
-        transform.translation = Vec2::new(
-            rand::random::<f32>() * width - width / 2.0,
-            rand::random::<f32>() * height - height / 2.0,
-        )
-        .extend(0.0);
+        let colour = ParticleColour::random();
 
-        **velocity = Vec2::ZERO;
+        commands.entity(particle_index).insert((
+            Transform::from_translation(
+                Vec2::new(
+                    rand::random::<f32>() * width - width / 2.0,
+                    rand::random::<f32>() * height - height / 2.0,
+                )
+                .extend(0.0),
+            ),
+            Velocity::default(),
+            colour,
+            MeshMaterial2d(particle_assets.material(colour)),
+        ));
 
         count += 1;
     }

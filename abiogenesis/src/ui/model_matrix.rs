@@ -6,9 +6,12 @@ mod model_box;
 use circle::*;
 use model_box::*;
 
-use crate::particles::{
-    colour::{ParticleColour::*, *},
-    model::Model,
+use crate::{
+    particles::{
+        colour::{ParticleColour::*, *},
+        model::Model,
+    },
+    ui::menu_button::hide_ui,
 };
 
 #[cfg_attr(
@@ -20,21 +23,21 @@ pub fn update_model_matrix(
     mut text: Query<&mut Text>,
     model: Res<Model>,
 ) {
-    for (value, mut color, children) in elements.iter_mut() {
+    for (value, mut colour, children) in elements.iter_mut() {
         let value = model[value.source.index()][value.target.index()];
 
         **(text.get_mut(children[0]).unwrap()) = format!("{value:.0}", value = value * 10.0);
 
         if value <= -0.0 {
-            *color = Color::from(GREY)
+            *colour = Color::from(GREY)
                 .mix(&RED, (-value).powf(0.5))
-                .with_alpha(color.0.alpha())
-                .into()
+                .with_alpha(colour.0.alpha())
+                .into();
         } else {
-            *color = Color::from(GREY)
+            *colour = Color::from(GREY)
                 .mix(&GREEN, value.powf(0.5))
-                .with_alpha(color.0.alpha())
-                .into()
+                .with_alpha(colour.0.alpha())
+                .into();
         }
     }
 }
@@ -54,9 +57,11 @@ pub fn model_matrix() -> impl Bundle {
         Name::from("Model Matrix"),
         Node {
             display: Display::Grid,
-            grid_template_columns: vec![RepeatedGridTrack::px(4, 40.)],
-            grid_template_rows: vec![RepeatedGridTrack::px(4, 40.)],
-            justify_content: JustifyContent::Start,
+            width: Val::Px(200.0),
+            height: Val::Px(200.0),
+            grid_template_columns: vec![RepeatedGridTrack::flex(4, 1.0)],
+            grid_template_rows: vec![RepeatedGridTrack::flex(4, 1.0)],
+            justify_content: JustifyContent::Stretch,
             align_content: AlignContent::Start,
             justify_items: JustifyItems::Stretch,
             align_items: AlignItems::Stretch,
@@ -66,7 +71,7 @@ pub fn model_matrix() -> impl Bundle {
         },
         // children![] has a maximum limit of children
         many_children!(
-            Node::default(),
+            hide_ui(),
             circle(Red),
             circle(Green),
             circle(Blue),

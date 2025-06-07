@@ -1,3 +1,5 @@
+use std::ops::RangeInclusive;
+
 use bevy::prelude::*;
 
 use crate::{
@@ -5,6 +7,7 @@ use crate::{
     particles::{
         colour::ParticleColour,
         model::{Model, PRESETS},
+        particle::{Particle, Velocity},
         size::SimulationSize,
         spatial_index::SpatialIndex,
     },
@@ -20,12 +23,12 @@ impl Plugin for SimulationPlugin {
     }
 }
 
-#[derive(Debug, Reflect, Component)]
-#[require(Transform, ParticleColour, Velocity)]
-pub struct Particle;
-
-#[derive(Debug, Reflect, Component, Default, Clone, Copy, Deref, DerefMut)]
-pub struct Velocity(Vec2);
+pub const FRICTION_RANGE: RangeInclusive<f32> = 0.0..=5.0;
+pub const FORCE_STRENGTH_RANGE: RangeInclusive<f32> = 0.0..=200.0;
+pub const ATTRACTION_RADIUS_RANGE: RangeInclusive<f32> = 0.0..=200.0;
+pub const PEAK_ATTRACTION_RADIUS_RANGE: RangeInclusive<f32> = 0.0..=200.0;
+pub const REPULSION_RADIUS_RANGE: RangeInclusive<f32> = 0.0..=200.0;
+pub const DECAY_RATE_RANGE: RangeInclusive<f32> = 0.0..=200.0;
 
 #[derive(Debug, Reflect, Resource, Clone, Copy)]
 #[reflect(Resource)]

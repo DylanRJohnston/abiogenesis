@@ -1,6 +1,12 @@
 use bevy::prelude::*;
 
-use crate::{observe::observe, ui::mixins};
+use crate::{
+    observe::observe,
+    ui::{
+        colours::{UI_BACKGROUND, UI_BACKGROUND_FOCUSED},
+        mixins,
+    },
+};
 
 pub fn control_button(
     text: &'static str,
@@ -21,8 +27,8 @@ pub fn control_button(
             // (Text::new(text), Pickable::IGNORE),
             (
                 Node {
-                    width: Val::Px(25.0),
-                    height: Val::Px(25.0),
+                    width: Val::Px(32.0),
+                    height: Val::Px(32.0),
                     ..default()
                 },
                 ImageNode {
@@ -33,7 +39,7 @@ pub fn control_button(
                 Pickable::IGNORE
             ),
         ],
-        mixins::hover_colour(Color::WHITE.with_alpha(0.1), Color::WHITE.with_alpha(0.2)),
+        mixins::hover_colour(UI_BACKGROUND, UI_BACKGROUND_FOCUSED),
         mixins::tooltip(text),
         observe(move |_: Trigger<Pointer<Click>>, mut commands: Commands| {
             commands.trigger(event);

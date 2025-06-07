@@ -1,24 +1,17 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
-use bevy_tweening::{Animator, EaseMethod, Lens, Tween, lens::TransformRotationLens};
+use bevy_tweening::{Animator, EaseMethod, Tween, lens::TransformRotationLens};
 
 use crate::{
-    math::lerp,
     observe::observe,
-    ui::{icon::Icon, mixins},
+    ui::{
+        colours::{UI_BACKGROUND, UI_BACKGROUND_FOCUSED},
+        icon::Icon,
+        lenses::HeightLens,
+        mixins,
+    },
 };
-
-pub struct HeightLens {
-    start: f32,
-    end: f32,
-}
-
-impl Lens<Node> for HeightLens {
-    fn lerp(&mut self, target: &mut dyn bevy_tweening::Targetable<Node>, ratio: f32) {
-        target.height = Val::Px(lerp(self.start, self.end, ratio));
-    }
-}
 
 #[derive(Debug, Component, PartialEq, Eq, Default)]
 enum DropdownState {
@@ -55,7 +48,7 @@ pub fn dropdown(
             ..default()
         },
         BorderRadius::all(Val::Px(8.0)),
-        BackgroundColor(Color::WHITE.with_alpha(0.1)),
+        BackgroundColor(UI_BACKGROUND),
         children![header(title, header_tooltip), contents],
         observe(toggle_state),
     )
@@ -84,7 +77,7 @@ fn header(title: &'static str, tooltip: &'static str) -> impl Bundle {
             should_block_lower: true,
             is_hoverable: true,
         },
-        mixins::hover_colour(Color::NONE, Color::WHITE.with_alpha(0.1)),
+        mixins::hover_colour(Color::NONE, UI_BACKGROUND_FOCUSED),
         mixins::tooltip(tooltip),
         observe(
             |mut trigger: Trigger<Pointer<Click>>, mut commands: Commands| {

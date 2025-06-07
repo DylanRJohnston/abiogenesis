@@ -38,6 +38,7 @@ pub fn model_box(source: ParticleColour, target: ParticleColour) -> impl Bundle 
         children![(
             Text::new("0"),
             TextFont::from_font_size(24.0),
+            TextColor::default(),
             Pickable::IGNORE,
         )],
         mixins::tooltip(text),
@@ -46,7 +47,7 @@ pub fn model_box(source: ParticleColour, target: ParticleColour) -> impl Bundle 
         observe(drag_end),
         mixins::cursor_grab_icon(),
         mixins::hover_colour(
-            Color::default().with_alpha(0.5),
+            Color::default().with_alpha(0.3),
             Color::default().with_alpha(0.8),
         ),
     )

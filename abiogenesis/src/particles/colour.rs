@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use rand::Rng;
 
 #[derive(Debug, Reflect, Component, Default, Clone, Copy, PartialEq, Eq)]
 pub enum ParticleColour {
@@ -44,6 +45,15 @@ impl ParticleColour {
             ParticleColour::Green => 1,
             ParticleColour::Blue => 2,
             ParticleColour::Orange => 3,
+        }
+    }
+
+    pub fn random() -> Self {
+        match rand::thread_rng().gen_range(0..=2) {
+            0 => ParticleColour::Red,
+            1 => ParticleColour::Green,
+            2 => ParticleColour::Blue,
+            _ => unreachable!(),
         }
     }
 }

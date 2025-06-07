@@ -1,4 +1,7 @@
+use std::time::Duration;
+
 use bevy::{prelude::*, window::WindowResized};
+use bevy_tweening::{Animator, Tween};
 
 use crate::{
     controls,
@@ -11,32 +14,40 @@ use crate::{
     ui::{
         button::control_button,
         examples::examples,
+        lenses::LeftLens,
+        menu_button::show_ui_button,
         model_matrix::{model_matrix, update_model_matrix},
         parameters::parameters,
+        toolbar::{ToolBarPlugin, toolbar},
     },
 };
 
 mod button;
+mod colours;
 mod dropdown;
 mod examples;
 mod icon;
+mod lenses;
+mod menu_button;
 mod mixins;
 mod model_matrix;
 mod parameters;
 mod slider;
+pub mod toolbar;
 
 pub struct UIPlugin;
 
 impl Plugin for UIPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, (detect_layout, respawn_ui).chain())
+        app.add_plugins(ToolBarPlugin)
+            .add_systems(Startup, (detect_layout, respawn_ui).chain())
             .add_systems(Update, update_model_matrix.in_set(AppSystems::Update))
             .add_systems(Update, on_window_resized);
     }
 }
 
 #[derive(Debug, Event, Resource, Reflect, PartialEq, Eq, Copy, Clone)]
-enum Layout {
+pub enum Layout {
     Horizontal,
     Vertical,
 }
@@ -51,10 +62,18 @@ impl Layout {
 }
 
 fn decide_layout(width: f32, height: f32) -> Layout {
-    if width > height {
-        Layout::Vertical
+    if width > 630.0 {
+        if height < 590.0 {
+            Layout::Horizontal
+        } else {
+            Layout::Vertical
+        }
     } else {
-        Layout::Horizontal
+        if height < 710.0 {
+            Layout::Horizontal
+        } else {
+            Layout::Vertical
+        }
     }
 }
 
@@ -62,6 +81,7 @@ fn detect_layout(window: Single<&Window>, mut commands: Commands) {
     commands.insert_resource(decide_layout(window.width(), window.height()));
 }
 
+#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
 fn on_window_resized(
     window: Single<&Window>,
     mut resize_reader: EventReader<WindowResized>,
@@ -82,13 +102,13 @@ fn on_window_resized(
 }
 
 #[derive(Debug, Component, Reflect)]
-struct UIRoot;
+pub struct UIRoot;
 
 #[cfg_attr(
     feature = "hot_reload",
     bevy_simple_subsecond_system::hot(rerun_on_hot_patch = true)
 )]
-fn respawn_ui(
+pub fn respawn_ui(
     mut commands: Commands,
     icons: Res<AssetServer>,
     layout: Res<Layout>,
@@ -100,57 +120,68 @@ fn respawn_ui(
 
     commands.spawn((
         full_screen_container(),
-        children![(
-            sidebar(*layout),
-            prevent_event_propagation(),
-            children![
-                model_matrix(),
-                (
-                    Node {
-                        width: Val::Percent(100.0),
-                        flex_direction: FlexDirection::Column,
-                        align_items: AlignItems::End,
-                        row_gap: Val::Px(8.0),
-                        column_gap: Val::Px(8.0),
-                        ..default()
-                    },
-                    children![
-                        (
-                            Node {
-                                width: Val::Percent(100.0),
-                                justify_content: JustifyContent::SpaceBetween,
-                                column_gap: Val::Px(8.0),
-                                ..default()
-                            },
-                            children![
-                                control_button(
-                                    "Clear all cells",
-                                    ClearParticles,
-                                    icons.load("icons/clear.png")
-                                ),
-                                control_button(
-                                    "Reset cell positions",
-                                    Respawn,
-                                    icons.load("icons/reload.png")
-                                ),
-                                control_button(
-                                    "Randomise inter-cell forces",
-                                    Randomise,
-                                    icons.load("icons/shuffle.png")
-                                ),
-                            ],
-                        ),
-                        parameters(),
-                        examples()
-                    ]
-                )
-            ]
-        )],
+        children![
+            show_ui_button(),
+            (
+                sidebar(*layout),
+                mixins::block_all_interactions(),
+                Animator::new(Tween::new(
+                    EaseFunction::SmootherStepOut,
+                    Duration::from_secs_f32(1.),
+                    LeftLens {
+                        start: if *layout == Layout::Horizontal {
+                            -500.0
+                        } else {
+                            -250.0
+                        },
+                        end: 0.0,
+                    }
+                )),
+                children![
+                    model_matrix(),
+                    (
+                        Node {
+                            flex_direction: FlexDirection::Column,
+                            align_items: AlignItems::End,
+                            row_gap: Val::Px(8.0),
+                            column_gap: Val::Px(8.0),
+                            ..default()
+                        },
+                        children![
+                            (
+                                Node {
+                                    width: Val::Percent(100.0),
+                                    justify_content: JustifyContent::SpaceBetween,
+                                    column_gap: Val::Px(8.0),
+                                    ..default()
+                                },
+                                children![
+                                    control_button(
+                                        "Annihilation",
+                                        ClearParticles,
+                                        icons.load("icons/nuclear-explosion.png")
+                                    ),
+                                    control_button(
+                                        "Rebirth",
+                                        Respawn,
+                                        icons.load("icons/plant.png")
+                                    ),
+                                    control_button(
+                                        "Reshape the Clay",
+                                        Randomise,
+                                        icons.load("icons/dice.png")
+                                    ),
+                                ],
+                            ),
+                            parameters(),
+                            examples()
+                        ]
+                    )
+                ]
+            ),
+            toolbar()
+        ],
     ));
-}
-
-fn prevent_event_propagation() -> impl Bundle {
-    observe(|mut trigger: Trigger<Pointer<Click>>| trigger.propagate(false))
 }
 
 fn full_screen_container() -> impl Bundle {
@@ -159,6 +190,7 @@ fn full_screen_container() -> impl Bundle {
         Node {
             width: Val::Percent(100.0),
             height: Val::Percent(100.0),
+            flex_direction: FlexDirection::Column,
             justify_content: JustifyContent::Start,
             align_items: AlignItems::Start,
             ..default()
@@ -166,18 +198,26 @@ fn full_screen_container() -> impl Bundle {
         observe(controls::drag_screen),
         observe(controls::scroll_wheel_zoom),
         observe(controls::select_follow_particle),
+        observe(controls::particle_brush_start),
+        observe(controls::particle_brush_drag),
+        observe(controls::eraser_brush_start),
+        observe(controls::eraser_brush_drag),
     )
 }
 
+#[derive(Debug, Component, Deref, Clone, Copy)]
+pub struct Sidebar(Layout);
+
 fn sidebar(direction: Layout) -> impl Bundle {
-    Node {
-        padding: UiRect::all(Val::Px(8.0)),
-        display: Display::Flex,
-        flex_direction: direction.flex_direction(),
-        justify_content: JustifyContent::SpaceBetween,
-        align_items: AlignItems::Start,
-        row_gap: Val::Px(16.0),
-        column_gap: Val::Px(16.0),
-        ..default()
-    }
+    (
+        Sidebar(direction),
+        Node {
+            padding: UiRect::all(Val::Px(8.0)),
+            display: Display::Flex,
+            flex_direction: direction.flex_direction(),
+            row_gap: Val::Px(4.0),
+            column_gap: Val::Px(16.0),
+            ..default()
+        },
+    )
 }

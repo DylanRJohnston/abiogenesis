@@ -14,14 +14,17 @@ pub fn tooltip(text: impl Into<String>) -> impl Bundle {
 #[derive(Debug, Clone, Copy, Component)]
 pub struct Tooltip;
 
-fn tooltip_bundle(text: String) -> impl Bundle {
+fn tooltip_bundle(text: String, position: Vec2) -> impl Bundle {
     (
         Tooltip,
         Node {
             padding: UiRect::all(Val::Px(8.0)),
+            top: Val::Px(position.y),
+            left: Val::Px(position.x),
             ..default()
         },
         GlobalZIndex(100),
+        Pickable::IGNORE,
         BackgroundColor(Color::BLACK.with_alpha(0.8)),
         BorderRadius::all(Val::Px(8.0)),
         children![(
@@ -33,8 +36,11 @@ fn tooltip_bundle(text: String) -> impl Bundle {
 }
 
 fn tooltip_hover_start(text: String) -> impl Fn(Trigger<Pointer<Over>>, Commands) {
-    move |_, mut commands| {
-        commands.spawn(tooltip_bundle(text.clone()));
+    move |trigger, mut commands| {
+        commands.spawn(tooltip_bundle(
+            text.clone(),
+            trigger.pointer_location.position,
+        ));
     }
 }
 

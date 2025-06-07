@@ -69,7 +69,7 @@
           set -o nounset
           set -x
 
-          BEVY_ASSET_ROOT="abiogenesis" dx serve --hot-patch --package abiogenesis --no-default-features --features hot_reload  
+          BEVY_ASSET_ROOT="abiogenesis" dx serve --hot-patch --package abiogenesis --no-default-features --features hot_reload $@
         '';
       in
       rec {

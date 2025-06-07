@@ -8,6 +8,7 @@ use crate::particles::{
 pub mod colour;
 pub mod decay;
 pub mod model;
+pub mod particle;
 pub mod simulation;
 pub mod size;
 pub mod spatial_index;
@@ -18,6 +19,7 @@ pub struct ParticlePlugin;
 impl Plugin for ParticlePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
+            particle::ParticlePlugin,
             ModelPlugin,
             DecayPlugin,
             SimulationPlugin,

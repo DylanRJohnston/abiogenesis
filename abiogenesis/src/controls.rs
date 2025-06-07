@@ -3,9 +3,13 @@ use std::{cmp::Ordering, time::Duration};
 use bevy::prelude::*;
 
 use crate::{
-    camera::FollowParticle,
-    particles::{simulation::Particle, size::SimulationSize, spatial_index::SpatialIndex},
+    camera::{FollowParticle, Viewport},
+    particles::{
+        particle::Particle, size::SimulationSize, spatial_index::SpatialIndex,
+        spawner::SpawnParticle,
+    },
     systems::AppSystems,
+    ui::toolbar::Tool,
 };
 
 pub struct ControlsPlugin;
@@ -107,12 +111,14 @@ fn touch_registration_timeout(
 pub fn select_follow_particle(
     trigger: Trigger<Pointer<Click>>,
     spatial_index: Res<SpatialIndex>,
-    camera: Single<(&Camera, &GlobalTransform)>,
-    follow_particle: Option<Res<FollowParticle>>,
+    viewport: Viewport,
     touch_registration_timeout: Option<ResMut<TouchRegistrationTimeout>>,
+    tool: Res<Tool>,
     mut commands: Commands,
 ) {
-    tracing::info!("select_follow_particle");
+    if *tool != Tool::Camera {
+        return;
+    }
 
     if !matches!(trigger.button, PointerButton::Primary) {
         return;
@@ -123,18 +129,7 @@ pub fn select_follow_particle(
         return;
     }
 
-    if follow_particle.is_some() {
-        commands.remove_resource::<FollowParticle>();
-        return;
-    }
-
-    let (camera, camera_transform) = *camera;
-
-    let Ok(pointer_location) =
-        camera.viewport_to_world_2d(camera_transform, trigger.pointer_location.position)
-    else {
-        return;
-    };
+    let pointer_location = viewport.to_world(trigger.pointer_location.position);
 
     let Some((_, (entity, _))) =
         spatial_index
@@ -156,10 +151,13 @@ pub fn drag_screen(
     trigger: Trigger<Pointer<Drag>>,
     mut particles: Query<&mut Transform, With<Particle>>,
     projection: Single<&Projection>,
+    mut commands: Commands,
 ) {
     if !matches!(trigger.button, PointerButton::Secondary) {
         return;
     }
+
+    commands.remove_resource::<FollowParticle>();
 
     let Projection::Orthographic(ref project) = **projection else {
         return;
@@ -186,4 +184,90 @@ pub fn scroll_wheel_zoom(
 
     let (min_zoom, max_zoom) = simulation_size.scale_bounds();
     project.scale = (project.scale - trigger.y.clamp(-0.05, 0.05)).clamp(min_zoom, max_zoom);
+}
+
+#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
+pub fn particle_brush_start(
+    trigger: Trigger<Pointer<Pressed>>,
+    tool: Res<Tool>,
+    viewport: Viewport,
+    mut spawn_particles: EventWriter<SpawnParticle>,
+) {
+    let Tool::Particle(colour) = *tool else {
+        return;
+    };
+
+    if !matches!(trigger.button, PointerButton::Primary) {
+        return;
+    }
+
+    let position = viewport.to_world(trigger.pointer_location.position);
+
+    spawn_particles.write(SpawnParticle { position, colour });
+}
+
+#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
+pub fn particle_brush_drag(
+    trigger: Trigger<Pointer<Drag>>,
+    tool: Res<Tool>,
+    viewport: Viewport,
+    mut spawn_particles: EventWriter<SpawnParticle>,
+) {
+    let Tool::Particle(colour) = *tool else {
+        return;
+    };
+
+    if !matches!(trigger.button, PointerButton::Primary) {
+        return;
+    }
+
+    let position = viewport.to_world(trigger.pointer_location.position);
+
+    spawn_particles.write(SpawnParticle { position, colour });
+}
+
+#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
+pub fn eraser_brush_start(
+    trigger: Trigger<Pointer<Pressed>>,
+    tool: Res<Tool>,
+    viewport: Viewport,
+    spatial_index: Res<SpatialIndex>,
+    mut commands: Commands,
+) {
+    let Tool::Eraser = *tool else {
+        return;
+    };
+
+    if !matches!(trigger.button, PointerButton::Primary) {
+        return;
+    }
+
+    let position = viewport.to_world(trigger.pointer_location.position);
+
+    for (_, &(entity, _)) in spatial_index.query(position, 30.0) {
+        commands.entity(entity).try_despawn();
+    }
+}
+
+#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
+pub fn eraser_brush_drag(
+    trigger: Trigger<Pointer<Drag>>,
+    tool: Res<Tool>,
+    viewport: Viewport,
+    spatial_index: Res<SpatialIndex>,
+    mut commands: Commands,
+) {
+    let Tool::Eraser = *tool else {
+        return;
+    };
+
+    if !matches!(trigger.button, PointerButton::Primary) {
+        return;
+    }
+
+    let position = viewport.to_world(trigger.pointer_location.position);
+
+    for (_, &(entity, _)) in spatial_index.query(position, 30.0) {
+        commands.entity(entity).try_despawn();
+    }
 }

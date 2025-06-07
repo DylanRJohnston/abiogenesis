@@ -1,41 +1,66 @@
 use bevy::prelude::*;
+use rand::Rng;
 
 use crate::particles::{
-    simulation::{Particle, SimulationParams},
-    spawner::ParticleIndexes,
+    particle::{Particle, ParticleIndex},
+    simulation::{
+        ATTRACTION_RADIUS_RANGE, FORCE_STRENGTH_RANGE, FRICTION_RANGE,
+        PEAK_ATTRACTION_RADIUS_RANGE, SimulationParams,
+    },
 };
 
-pub const PRESETS: [(&str, Model, SimulationParams); 7] = [
+pub const PRESETS: [(&str, Model, SimulationParams); 8] = [
     (
-        "Mantaray",
+        "The First Garden",
         Model {
             weights: [[0.3, 0.4, 0.5], [0.7, -0.4, 0.3], [-0.5, 0.5, 0.0]],
         },
         SimulationParams::DEFAULT,
     ),
     (
-        "Life Cycle",
+        "Circle of Life",
         Model {
             weights: [[-0.2, 0.2, 0.8], [0.0, 0.7, 0.3], [0.6, 0.3, -0.5]],
         },
         SimulationParams::DEFAULT,
     ),
     (
-        "SNAKES!",
+        "Jörmungandr",
         Model {
             weights: [[-0.8, 0.7, 0.7], [0.7, -0.8, 0.7], [0.3, 0.7, -0.8]],
         },
-        SimulationParams::DEFAULT,
+        SimulationParams {
+            friction: 2.5,
+            force_strength: 100.0,
+            attraction_radius: 120.0,
+            peak_attraction_radius: 80.0,
+            repulsion_radius: 20.0,
+            decay_rate: 80.0,
+        },
     ),
     (
-        "Spinors",
+        "Predation",
+        Model {
+            weights: [[0.9, -0.8, -0.9], [-0.1, 0.9, -0.4], [0.6, 0.8, -0.5]],
+        },
+        SimulationParams {
+            friction: 2.5,
+            force_strength: 80.0,
+            attraction_radius: 100.0,
+            peak_attraction_radius: 20.0,
+            repulsion_radius: 40.0,
+            decay_rate: 80.0,
+        },
+    ),
+    (
+        "Endless Chase",
         Model {
             weights: [[1.0, 0.2, 0.0], [0.0, 1.0, 0.2], [0.2, 0.0, 1.0]],
         },
         SimulationParams::DEFAULT,
     ),
     (
-        "Trisolaris",
+        "The Trinity",
         Model {
             weights: [[0.3, 0.4, 0.5], [0.7, -0.4, 0.3], [-0.5, 0.5, 0.0]],
         },
@@ -49,7 +74,7 @@ pub const PRESETS: [(&str, Model, SimulationParams); 7] = [
         },
     ),
     (
-        "Hypersphere",
+        "Divine Engine",
         Model {
             weights: [[-0.1, 0.7, 0.0], [0.0, -0.1, 0.7], [0.7, 0.0, -0.1]],
         },
@@ -63,7 +88,7 @@ pub const PRESETS: [(&str, Model, SimulationParams); 7] = [
         },
     ),
     (
-        "Blank",
+        "Heath Death",
         Model {
             weights: [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
         },
@@ -89,7 +114,21 @@ pub struct Model {
 #[derive(Debug, Event, Clone, Copy, Reflect)]
 pub struct Randomise;
 
-fn randomise_model(_: Trigger<Randomise>, mut model: ResMut<Model>) {
+#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
+fn randomise_model(
+    _trigger: Trigger<Randomise>,
+    mut model: ResMut<Model>,
+    mut params: ResMut<SimulationParams>,
+) {
+    let mut rng = rand::thread_rng();
+
+    params.friction = rng.gen_range(1.0..=*FRICTION_RANGE.end());
+    params.force_strength = rng.gen_range(20.0..=*FORCE_STRENGTH_RANGE.end());
+    params.attraction_radius = rng.gen_range(20.0..=*ATTRACTION_RADIUS_RANGE.end());
+    params.peak_attraction_radius = rng.gen_range(0.0..=*PEAK_ATTRACTION_RADIUS_RANGE.end());
+    params.repulsion_radius =
+        rng.gen_range((params.attraction_radius / 10.0)..=params.attraction_radius);
+
     model.weights.iter_mut().for_each(|row| {
         row.iter_mut().for_each(|value| {
             *value = rand::random::<f32>() * 2.0 - 1.0;
@@ -105,8 +144,12 @@ fn clear_particles(
     _trigger: Trigger<ClearParticles>,
     particles: Query<Entity, With<Particle>>,
     mut commands: Commands,
-    mut particle_index: ResMut<ParticleIndexes>,
+    mut particle_index: ResMut<ParticleIndex>,
+    mut params: ResMut<SimulationParams>,
 ) {
+    // If someone clears all the particles, it's likely they want to design a creature, so disable decay.
+    params.decay_rate = 0.0;
+
     particles.iter().for_each(|particle| {
         commands.entity(particle).despawn();
     });

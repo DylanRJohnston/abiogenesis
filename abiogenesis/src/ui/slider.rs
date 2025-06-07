@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, ops::RangeInclusive};
 
 use bevy::{prelude::*, ui::UiSystem};
 
@@ -12,8 +12,7 @@ pub const COMPONENT_SIZE: f32 = SLIDER_SIZE + 16.0 * 1.2;
 
 pub struct Slider<R: Resource> {
     pub name: &'static str,
-    pub lower: f32,
-    pub upper: f32,
+    pub range: RangeInclusive<f32>,
     pub lens: fn(&mut R) -> &mut f32,
 }
 
@@ -43,7 +42,7 @@ impl<R: Resource> Slider<R> {
                                 ..default()
                             },
                             BorderRadius::all(Val::Px(8.0)),
-                            BackgroundColor(Color::WHITE.with_alpha(0.1))
+                            BackgroundColor(Color::WHITE.with_alpha(0.5)),
                         ),
                         (
                             Node {
@@ -59,8 +58,7 @@ impl<R: Resource> Slider<R> {
                             BackgroundColor(Color::WHITE.with_alpha(0.8)),
                             mixins::cursor_grab_icon(),
                             SliderComponent {
-                                lower: self.lower,
-                                upper: self.upper,
+                                range: self.range,
                                 lens: self.lens,
                             },
                             BundleFn(register_slider_system_once::<SimulationParams>),
@@ -81,8 +79,7 @@ impl<R: Resource> Slider<R> {
 
 #[derive(Debug, Component)]
 struct SliderComponent<R: Resource> {
-    lower: f32,
-    upper: f32,
+    range: RangeInclusive<f32>,
     lens: fn(&mut R) -> &mut f32,
 }
 
@@ -128,8 +125,8 @@ fn update_slider_position<R: Resource>(
 
         node.left = Val::Px(remap(
             value,
-            slider.lower,
-            slider.upper,
+            *slider.range.start(),
+            *slider.range.end(),
             0.,
             size - SLIDER_SIZE,
         ));
@@ -137,7 +134,7 @@ fn update_slider_position<R: Resource>(
         let mut text = text.get_mut(*children.get(0).unwrap()).unwrap();
         **text = format!(
             "{value:.0}",
-            value = remap(value, slider.lower, slider.upper, 0., 10.)
+            value = remap(value, *slider.range.start(), *slider.range.end(), 0., 10.)
         );
     }
 }
@@ -159,6 +156,6 @@ fn drag<R: Resource>(
 
     let value = (slider.lens)(&mut params);
 
-    *value = (*value + percentage_change * (slider.upper - slider.lower))
-        .clamp(slider.lower, slider.upper);
+    *value = (*value + percentage_change * (*slider.range.end() - *slider.range.start()))
+        .clamp(*slider.range.start(), *slider.range.end());
 }

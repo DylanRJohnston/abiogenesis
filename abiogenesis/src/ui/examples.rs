@@ -7,6 +7,7 @@ use crate::{
         simulation::SimulationParams,
     },
     ui::{
+        colours::UI_BACKGROUND_FOCUSED,
         dropdown::{ToggleState, dropdown},
         mixins,
     },
@@ -19,7 +20,7 @@ const TOTAL_HEIGHT: f32 =
     (NUM_PRESETS as f32) * FONT_SIZE + 2.0 * VERTICAL_PADDING * NUM_PRESETS as f32;
 
 pub fn examples() -> impl Bundle {
-    dropdown("Examples", "Example Presets", TOTAL_HEIGHT, contents())
+    dropdown("Fates", "Table of Worlds", TOTAL_HEIGHT, contents())
 }
 
 const DROPDOWN_PADDING: f32 = 8.0;
@@ -30,7 +31,7 @@ fn contents() -> impl Bundle {
             flex_direction: FlexDirection::Column,
             align_items: AlignItems::Start,
             justify_content: JustifyContent::Start,
-            width: Val::Percent(100.0),
+            width: Val::Px(200.0),
             padding: UiRect::all(Val::Px(DROPDOWN_PADDING)),
             ..default()
         },
@@ -43,7 +44,7 @@ fn contents() -> impl Bundle {
                     ..default()
                 },
                 BorderRadius::all(Val::Px(4.0)),
-                mixins::hover_colour(Color::NONE, Color::WHITE.with_alpha(0.1)),
+                mixins::hover_colour(Color::NONE, UI_BACKGROUND_FOCUSED),
                 children![(Text::from(*name), Pickable::IGNORE)],
                 observe(
                     |mut trigger: Trigger<Pointer<Click>>,
