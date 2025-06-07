@@ -20,14 +20,14 @@ use crate::{
 pub enum Tool {
     Camera,
     Particle(ParticleColour),
-    Eraser,
+    Smite,
 }
 
 impl Tool {
     fn index(&self) -> usize {
         match self {
             Tool::Camera => 0,
-            Tool::Eraser => 1,
+            Tool::Smite => 1,
             Tool::Particle(ParticleColour::Red) => 2,
             Tool::Particle(ParticleColour::Green) => 3,
             Tool::Particle(ParticleColour::Blue) => 4,
@@ -163,7 +163,7 @@ fn camera_tool() -> impl Bundle {
 
 fn eraser_tool() -> impl Bundle {
     (
-        Tool::Eraser,
+        Tool::Smite,
         tool(),
         mixins::tooltip("Smite"),
         children![(
@@ -255,4 +255,53 @@ fn update_camera(
     };
 
     Ok(())
+}
+
+#[derive(Debug, Component)]
+pub struct HoverRegion;
+
+#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
+pub fn smite_start_hover(trigger: Trigger<Pointer<Over>>, tool: Res<Tool>, mut commands: Commands) {
+    if Tool::Smite != *tool {
+        return;
+    };
+
+    let position = trigger.pointer_location.position - Vec2::new(30., 30.);
+
+    commands.spawn((
+        HoverRegion,
+        Node {
+            position_type: PositionType::Absolute,
+            width: Val::Px(60.),
+            height: Val::Px(60.),
+            left: Val::Px(position.x),
+            top: Val::Px(position.y),
+            ..default()
+        },
+        GlobalZIndex(-100),
+        BackgroundColor(Color::from(WHITE).with_alpha(0.05)),
+        BorderRadius::all(Val::Percent(50.)),
+    ));
+}
+
+#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
+pub fn smite_hover(
+    trigger: Trigger<Pointer<Move>>,
+    mut hover_region: Single<&mut Node, With<HoverRegion>>,
+) {
+    let position = trigger.pointer_location.position - Vec2::new(30., 30.);
+
+    hover_region.top = Val::Px(position.y);
+    hover_region.left = Val::Px(position.x);
+}
+
+#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
+pub fn smite_end_hover(
+    _trigger: Trigger<Pointer<Out>>,
+    hover_region: Query<Entity, With<HoverRegion>>,
+    mut commands: Commands,
+) {
+    for entity in hover_region.iter() {
+        commands.entity(entity).despawn();
+    }
 }

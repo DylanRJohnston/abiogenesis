@@ -18,7 +18,7 @@ use crate::{
         menu_button::{hide_ui, show_ui_button},
         model_matrix::{model_matrix, update_model_matrix},
         parameters::parameters,
-        toolbar::{ToolBarPlugin, toolbar},
+        toolbar::ToolBarPlugin,
     },
 };
 
@@ -172,7 +172,7 @@ pub fn respawn_ui(
                     ]
                 )]
             ),
-            toolbar()
+            toolbar::toolbar()
         ],
     ));
 }
@@ -195,6 +195,9 @@ fn full_screen_container() -> impl Bundle {
         observe(controls::particle_brush_drag),
         observe(controls::eraser_brush_start),
         observe(controls::eraser_brush_drag),
+        observe(toolbar::smite_start_hover),
+        observe(toolbar::smite_hover),
+        observe(toolbar::smite_end_hover),
     )
 }
 

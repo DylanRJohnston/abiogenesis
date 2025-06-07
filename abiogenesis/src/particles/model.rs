@@ -122,6 +122,7 @@ fn randomise_model(
 ) {
     let mut rng = rand::thread_rng();
 
+    // We're not truly random across the parameter range to try and encourage interesting results
     params.force_strength = rng.gen_range(40.0..=*FORCE_STRENGTH_RANGE.end());
     params.friction = rng.gen_range(
         1.0..=(params.force_strength / *FORCE_STRENGTH_RANGE.end()) * FRICTION_RANGE.end(),

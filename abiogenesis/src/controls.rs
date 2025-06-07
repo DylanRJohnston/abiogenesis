@@ -234,7 +234,7 @@ pub fn eraser_brush_start(
     spatial_index: Res<SpatialIndex>,
     mut commands: Commands,
 ) {
-    let Tool::Eraser = *tool else {
+    let Tool::Smite = *tool else {
         return;
     };
 
@@ -257,7 +257,7 @@ pub fn eraser_brush_drag(
     spatial_index: Res<SpatialIndex>,
     mut commands: Commands,
 ) {
-    let Tool::Eraser = *tool else {
+    let Tool::Smite = *tool else {
         return;
     };
 
