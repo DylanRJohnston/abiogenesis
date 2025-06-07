@@ -65,17 +65,21 @@ pub fn dropdown(
 struct DropdownIcon;
 
 #[derive(Debug, Component)]
-pub struct HeaderText;
+struct HeaderText;
+
+#[derive(Debug, Component)]
+struct Header;
 
 fn header(title: &'static str, tooltip: &'static str) -> impl Bundle {
     (
+        Header,
         Node {
             justify_content: JustifyContent::SpaceBetween,
             align_items: AlignItems::Center,
             padding: UiRect::all(Val::Px(HEADER_PADDING)),
             ..default()
         },
-        BorderRadius::top(Val::Px(8.0)),
+        BorderRadius::all(Val::Px(8.0)),
         Pickable {
             should_block_lower: true,
             is_hoverable: true,
@@ -123,6 +127,7 @@ fn toggle_state(
     trigger: Trigger<ToggleState>,
     mut commands: Commands,
     dropdowns: Query<(Entity, &DropdownState, &Dropdown)>,
+    mut headers: Query<&mut BorderRadius, With<Header>>,
     icons: Query<(Entity, &Transform), With<DropdownIcon>>,
     children: Query<&Children>,
 ) -> Result<()> {
@@ -180,6 +185,17 @@ fn toggle_state(
     );
 
     commands.entity(icon_entity).insert(Animator::new(tween));
+
+    let header_entity = children
+        .iter_descendants(dropdown_entity)
+        .filter(|child| headers.contains(*child))
+        .next()
+        .ok_or("Failed to find header for dropdown")?;
+
+    *headers.get_mut(header_entity)? = match dropdown_state {
+        DropdownState::Closed => BorderRadius::top(Val::Px(8.0)),
+        DropdownState::Open => BorderRadius::all(Val::Px(8.0)),
+    };
 
     Ok(())
 }
