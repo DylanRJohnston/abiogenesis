@@ -2,3 +2,4 @@
 target
 site.zip
 *.DS_Store
+rustc-ice-*
