@@ -7,6 +7,7 @@ use crate::{
     },
     ui::{
         dropdown::dropdown,
+        icon::Icon,
         model_matrix::{MODEL_MATRIX_SIZE, model_matrix},
         slider::{self, Slider},
     },
@@ -18,7 +19,12 @@ const HEIGHT: f32 =
     NUM_SLIDERS * slider::COMPONENT_SIZE + ROW_GAP * (NUM_SLIDERS + 1.0) + MODEL_MATRIX_SIZE;
 
 pub fn parameters() -> impl Bundle {
-    (dropdown("Laws of Creation", HEIGHT, content()),)
+    (dropdown(
+        Icon("icons/balance.png"),
+        "Laws of Creation",
+        HEIGHT,
+        content(),
+    ),)
 }
 
 fn content() -> impl Bundle {

@@ -46,10 +46,7 @@ pub fn model_box(source: ParticleColour, target: ParticleColour) -> impl Bundle 
         observe(drag),
         observe(drag_end),
         mixins::cursor_grab_icon(),
-        mixins::hover_colour(
-            Color::default().with_alpha(0.8),
-            Color::default().with_alpha(1.),
-        ),
+        BackgroundColor(Color::NONE),
     )
 }
 

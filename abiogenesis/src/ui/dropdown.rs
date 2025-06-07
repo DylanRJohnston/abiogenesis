@@ -30,7 +30,12 @@ const HEADER_HEIGHT: f32 = 24.0;
 const HEADER_PADDING: f32 = 8.0;
 const ANIMATION_LENGTH: f32 = 0.5;
 
-pub fn dropdown(title: &'static str, height: f32, contents: impl Bundle) -> impl Bundle {
+pub fn dropdown(
+    icon: Icon,
+    title: &'static str,
+    height: f32,
+    contents: impl Bundle,
+) -> impl Bundle {
     (
         Dropdown {
             content_height: height,
@@ -44,7 +49,7 @@ pub fn dropdown(title: &'static str, height: f32, contents: impl Bundle) -> impl
         },
         BorderRadius::all(Val::Px(8.0)),
         BackgroundColor(UI_BACKGROUND),
-        children![header(title), contents],
+        children![header(icon, title), contents],
         observe(toggle_state),
     )
 }
@@ -58,11 +63,10 @@ struct HeaderText;
 #[derive(Debug, Component)]
 struct Header;
 
-fn header(title: &'static str) -> impl Bundle {
+fn header(icon: Icon, title: &'static str) -> impl Bundle {
     (
         Header,
         Node {
-            justify_content: JustifyContent::SpaceBetween,
             align_items: AlignItems::Center,
             padding: UiRect::all(Val::Px(HEADER_PADDING)),
             ..default()
@@ -81,6 +85,15 @@ fn header(title: &'static str) -> impl Bundle {
         ),
         children![
             (
+                Node {
+                    width: Val::Px(20.0),
+                    height: Val::Px(20.0),
+                    margin: UiRect::right(Val::Px(8.0)),
+                    ..default()
+                },
+                icon,
+            ),
+            (
                 HeaderText,
                 Node {
                     justify_content: JustifyContent::Center,
@@ -95,6 +108,7 @@ fn header(title: &'static str) -> impl Bundle {
                 Node {
                     width: Val::Px(24.0),
                     height: Val::Px(24.0),
+                    margin: UiRect::left(Val::Auto),
                     ..default()
                 },
                 Icon("icons/dropdown.png"),

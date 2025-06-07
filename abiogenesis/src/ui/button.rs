@@ -28,8 +28,8 @@ pub fn control_button(
             // (Text::new(text), Pickable::IGNORE),
             (
                 Node {
-                    width: Val::Px(24.0),
-                    height: Val::Px(24.0),
+                    width: Val::Px(32.0),
+                    height: Val::Px(32.0),
                     ..default()
                 },
                 ImageNode {

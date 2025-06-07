@@ -28,8 +28,8 @@ pub fn hide_ui() -> impl Bundle {
         mixins::tooltip("Behold"),
         children![(
             Node {
-                width: Val::Px(24.0),
-                height: Val::Px(24.0),
+                width: Val::Px(32.0),
+                height: Val::Px(32.0),
                 ..default()
             },
             Icon("icons/hide.png"),
@@ -121,7 +121,7 @@ pub fn show_ui_button() -> impl Bundle {
                 let (sidebar, &Sidebar(layout)) = *sidebar;
 
                 commands.entity(sidebar).insert(Animator::new(
-                    Sequence::from_single(Delay::new(Duration::from_secs_f32(0.750))).then(
+                    Sequence::from_single(Delay::new(Duration::from_secs_f32(0.4))).then(
                         Tween::new(
                             EaseFunction::SmootherStepOut,
                             Duration::from_secs_f32(1.),
@@ -138,7 +138,7 @@ pub fn show_ui_button() -> impl Bundle {
                 ));
 
                 commands.entity(*toolbar).insert(Animator::new(
-                    Sequence::from_single(Delay::new(Duration::from_secs_f32(0.750))).then(
+                    Sequence::from_single(Delay::new(Duration::from_secs_f32(0.4))).then(
                         Tween::new(
                             EaseFunction::SmootherStepOut,
                             Duration::from_secs_f32(1.),
@@ -152,7 +152,7 @@ pub fn show_ui_button() -> impl Bundle {
 
                 commands.entity(*show_ui).insert(Animator::new(Tween::new(
                     EaseFunction::SmootherStepIn,
-                    Duration::from_secs_f32(1.),
+                    Duration::from_secs_f32(0.5),
                     TopLens {
                         start: 0.,
                         end: -50.,

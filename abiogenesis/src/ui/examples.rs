@@ -9,6 +9,7 @@ use crate::{
     ui::{
         colours::UI_BACKGROUND_FOCUSED,
         dropdown::{ToggleState, dropdown},
+        icon::Icon,
         mixins,
     },
 };
@@ -20,7 +21,12 @@ const TOTAL_HEIGHT: f32 =
     (NUM_PRESETS as f32) * FONT_SIZE + 2.0 * VERTICAL_PADDING * NUM_PRESETS as f32;
 
 pub fn examples() -> impl Bundle {
-    dropdown("Book of Fates", TOTAL_HEIGHT, contents())
+    dropdown(
+        Icon("icons/open-book.png"),
+        "Book of Fates",
+        TOTAL_HEIGHT,
+        contents(),
+    )
 }
 
 const DROPDOWN_PADDING: f32 = 8.0;

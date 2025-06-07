@@ -1,4 +1,11 @@
-use bevy::{color::palettes::css::GREY, ecs::spawn::SpawnWith, prelude::*};
+use bevy::{
+    color::palettes::{
+        css::{BLACK, GREY, YELLOW},
+        tailwind::{YELLOW_100, YELLOW_600, YELLOW_900},
+    },
+    ecs::spawn::SpawnWith,
+    prelude::*,
+};
 
 mod circle;
 mod model_box;
@@ -13,6 +20,8 @@ use crate::{
     },
     ui::menu_button::hide_ui,
 };
+
+const MID_COLOR: Color = Color::Srgba(Srgba::rgb(233.0 / 255.0, 133.0 / 255.0, 55.0 / 255.0));
 
 #[cfg_attr(
     feature = "hot_reload",
@@ -29,15 +38,9 @@ pub fn update_model_matrix(
         **(text.get_mut(children[0]).unwrap()) = format!("{value:.0}", value = value * 10.0);
 
         if value <= -0.0 {
-            *colour = Color::from(GREY)
-                .mix(&RED, (-value).powf(0.5))
-                .with_alpha(colour.0.alpha())
-                .into();
+            *colour = MID_COLOR.mix(&RED, (-value).powf(0.5)).into();
         } else {
-            *colour = Color::from(GREY)
-                .mix(&GREEN, value.powf(0.5))
-                .with_alpha(colour.0.alpha())
-                .into();
+            *colour = MID_COLOR.mix(&GREEN, value.powf(0.5)).into();
         }
     }
 }

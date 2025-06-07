@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::prelude::*;
+use bevy::{color::palettes::css::WHITE, prelude::*};
 use bevy_tweening::{Animator, Tween};
 
 use crate::{
