@@ -6,7 +6,8 @@ use bevy_tweening::{Animator, Delay, Sequence, Tween};
 use crate::{
     observe::observe,
     ui::{
-        Layout, Sidebar, UIRoot,
+        Layout, Sidebar,
+        colours::{UI_BACKGROUND, UI_BACKGROUND_FOCUSED},
         icon::Icon,
         lenses::{BottomLens, LeftLens, TopLens},
         mixins,
@@ -17,14 +18,23 @@ use crate::{
 pub fn hide_ui() -> impl Bundle {
     (
         Node {
-            width: Val::Percent(100.),
-            height: Val::Percent(100.),
             align_items: AlignItems::Center,
             justify_content: JustifyContent::Center,
+            padding: UiRect::axes(Val::Px(12.0), Val::Px(8.0)),
             ..default()
         },
-        mixins::tooltip("Hide UI"),
-        children![Icon("icons/hide.png")],
+        BorderRadius::all(Val::Px(16.0)),
+        mixins::hover_colour(UI_BACKGROUND, UI_BACKGROUND_FOCUSED),
+        mixins::tooltip("Behold"),
+        children![(
+            Node {
+                width: Val::Px(24.0),
+                height: Val::Px(24.0),
+                ..default()
+            },
+            Icon("icons/hide.png"),
+            Pickable::IGNORE
+        )],
         observe(
             |mut trigger: Trigger<Pointer<Click>>,
              mut commands: Commands,
@@ -90,7 +100,7 @@ pub fn show_ui_button() -> impl Bundle {
             margin: UiRect::new(Val::Px(16.0), Val::default(), Val::Px(16.0), Val::default()),
             ..default()
         },
-        mixins::tooltip("Show UI"),
+        mixins::tooltip("Intervene"),
         children![(
             Pickable::IGNORE,
             Node {

@@ -7,16 +7,18 @@ use crate::{
     },
     ui::{
         dropdown::dropdown,
+        model_matrix::{MODEL_MATRIX_SIZE, model_matrix},
         slider::{self, Slider},
     },
 };
 
 const NUM_SLIDERS: f32 = 6.0;
 const ROW_GAP: f32 = 8.0;
-const HEIGHT: f32 = NUM_SLIDERS * slider::COMPONENT_SIZE + ROW_GAP * (NUM_SLIDERS);
+const HEIGHT: f32 =
+    NUM_SLIDERS * slider::COMPONENT_SIZE + ROW_GAP * (NUM_SLIDERS + 1.0) + MODEL_MATRIX_SIZE;
 
 pub fn parameters() -> impl Bundle {
-    (dropdown("Laws", "Laws of Creation", HEIGHT, content()),)
+    (dropdown("Laws of Creation", HEIGHT, content()),)
 }
 
 fn content() -> impl Bundle {
@@ -31,6 +33,7 @@ fn content() -> impl Bundle {
             ..default()
         },
         children![
+            model_matrix(),
             Slider {
                 name: "Friction",
                 range: FRICTION_RANGE,

@@ -15,7 +15,7 @@ use crate::{
         button::control_button,
         examples::examples,
         lenses::LeftLens,
-        menu_button::show_ui_button,
+        menu_button::{hide_ui, show_ui_button},
         model_matrix::{model_matrix, update_model_matrix},
         parameters::parameters,
         toolbar::{ToolBarPlugin, toolbar},
@@ -62,19 +62,20 @@ impl Layout {
 }
 
 fn decide_layout(width: f32, height: f32) -> Layout {
-    if width > 630.0 {
-        if height < 590.0 {
-            Layout::Horizontal
-        } else {
-            Layout::Vertical
-        }
-    } else {
-        if height < 710.0 {
-            Layout::Horizontal
-        } else {
-            Layout::Vertical
-        }
-    }
+    // if width > 630.0 {
+    //     if height < 590.0 {
+    //         Layout::Horizontal
+    //     } else {
+    //         Layout::Vertical
+    //     }
+    // } else {
+    //     if height < 710.0 {
+    //         Layout::Horizontal
+    //     } else {
+    //         Layout::Vertical
+    //     }
+    // }
+    Layout::Vertical
 }
 
 fn detect_layout(window: Single<&Window>, mut commands: Commands) {
@@ -91,6 +92,8 @@ fn on_window_resized(
     if resize_reader.read().count() == 0 {
         return;
     }
+
+    tracing::info!(width = ?window.width(), height = ?window.height());
 
     let new_layout = decide_layout(window.width(), window.height());
     if new_layout == *layout {
@@ -137,47 +140,37 @@ pub fn respawn_ui(
                         end: 0.0,
                     }
                 )),
-                children![
-                    model_matrix(),
-                    (
-                        Node {
-                            flex_direction: FlexDirection::Column,
-                            align_items: AlignItems::End,
-                            row_gap: Val::Px(8.0),
-                            column_gap: Val::Px(8.0),
-                            ..default()
-                        },
-                        children![
-                            (
-                                Node {
-                                    width: Val::Percent(100.0),
-                                    justify_content: JustifyContent::SpaceBetween,
-                                    column_gap: Val::Px(8.0),
-                                    ..default()
-                                },
-                                children![
-                                    control_button(
-                                        "Annihilation",
-                                        ClearParticles,
-                                        icons.load("icons/nuclear-explosion.png")
-                                    ),
-                                    control_button(
-                                        "Rebirth",
-                                        Respawn,
-                                        icons.load("icons/plant.png")
-                                    ),
-                                    control_button(
-                                        "Reshape the Clay",
-                                        Randomise,
-                                        icons.load("icons/dice.png")
-                                    ),
-                                ],
-                            ),
-                            parameters(),
-                            examples()
-                        ]
-                    )
-                ]
+                children![(
+                    Node {
+                        flex_direction: FlexDirection::Column,
+                        align_items: AlignItems::End,
+                        row_gap: Val::Px(8.0),
+                        column_gap: Val::Px(8.0),
+                        ..default()
+                    },
+                    children![
+                        examples(),
+                        parameters(),
+                        (
+                            Node {
+                                width: Val::Percent(100.0),
+                                justify_content: JustifyContent::SpaceBetween,
+                                column_gap: Val::Px(8.0),
+                                ..default()
+                            },
+                            children![
+                                hide_ui(),
+                                control_button(
+                                    "Annihilate",
+                                    ClearParticles,
+                                    icons.load("icons/nuclear-explosion.png")
+                                ),
+                                control_button("Revive", Respawn, icons.load("icons/plant.png")),
+                                control_button("Reshape", Randomise, icons.load("icons/dice.png")),
+                            ],
+                        ),
+                    ]
+                )]
             ),
             toolbar()
         ],

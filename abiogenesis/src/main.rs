@@ -6,7 +6,6 @@
 use bevy::{
     asset::{AssetMetaCheck, load_internal_binary_asset},
     prelude::*,
-    ui::UiPlugin,
 };
 use bevy_tweening::{AnimationSystem, TweeningPlugin};
 use particles::ParticlePlugin;

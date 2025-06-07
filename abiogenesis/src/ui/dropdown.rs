@@ -30,12 +30,7 @@ const HEADER_HEIGHT: f32 = 24.0;
 const HEADER_PADDING: f32 = 8.0;
 const ANIMATION_LENGTH: f32 = 0.5;
 
-pub fn dropdown(
-    title: &'static str,
-    header_tooltip: &'static str,
-    height: f32,
-    contents: impl Bundle,
-) -> impl Bundle {
+pub fn dropdown(title: &'static str, height: f32, contents: impl Bundle) -> impl Bundle {
     (
         Dropdown {
             content_height: height,
@@ -49,7 +44,7 @@ pub fn dropdown(
         },
         BorderRadius::all(Val::Px(8.0)),
         BackgroundColor(UI_BACKGROUND),
-        children![header(title, header_tooltip), contents],
+        children![header(title), contents],
         observe(toggle_state),
     )
 }
@@ -63,7 +58,7 @@ struct HeaderText;
 #[derive(Debug, Component)]
 struct Header;
 
-fn header(title: &'static str, tooltip: &'static str) -> impl Bundle {
+fn header(title: &'static str) -> impl Bundle {
     (
         Header,
         Node {
@@ -78,7 +73,6 @@ fn header(title: &'static str, tooltip: &'static str) -> impl Bundle {
             is_hoverable: true,
         },
         mixins::hover_colour(Color::NONE, UI_BACKGROUND_FOCUSED),
-        mixins::tooltip(tooltip),
         observe(
             |mut trigger: Trigger<Pointer<Click>>, mut commands: Commands| {
                 trigger.propagate(false);

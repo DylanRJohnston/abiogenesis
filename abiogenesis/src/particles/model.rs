@@ -122,12 +122,15 @@ fn randomise_model(
 ) {
     let mut rng = rand::thread_rng();
 
-    params.friction = rng.gen_range(1.0..=*FRICTION_RANGE.end());
-    params.force_strength = rng.gen_range(20.0..=*FORCE_STRENGTH_RANGE.end());
-    params.attraction_radius = rng.gen_range(20.0..=*ATTRACTION_RADIUS_RANGE.end());
+    params.force_strength = rng.gen_range(40.0..=*FORCE_STRENGTH_RANGE.end());
+    params.friction = rng.gen_range(
+        1.0..=(params.force_strength / *FORCE_STRENGTH_RANGE.end()) * FRICTION_RANGE.end(),
+    );
+
+    params.attraction_radius = rng.gen_range(60.0..=*ATTRACTION_RADIUS_RANGE.end());
     params.peak_attraction_radius = rng.gen_range(0.0..=*PEAK_ATTRACTION_RADIUS_RANGE.end());
     params.repulsion_radius =
-        rng.gen_range((params.attraction_radius / 10.0)..=params.attraction_radius);
+        rng.gen_range((params.attraction_radius / 10.0)..=(params.attraction_radius * 0.6));
 
     model.weights.iter_mut().for_each(|row| {
         row.iter_mut().for_each(|value| {

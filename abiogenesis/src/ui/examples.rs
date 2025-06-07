@@ -20,7 +20,7 @@ const TOTAL_HEIGHT: f32 =
     (NUM_PRESETS as f32) * FONT_SIZE + 2.0 * VERTICAL_PADDING * NUM_PRESETS as f32;
 
 pub fn examples() -> impl Bundle {
-    dropdown("Fates", "Table of Worlds", TOTAL_HEIGHT, contents())
+    dropdown("Book of Fates", TOTAL_HEIGHT, contents())
 }
 
 const DROPDOWN_PADDING: f32 = 8.0;
@@ -31,7 +31,7 @@ fn contents() -> impl Bundle {
             flex_direction: FlexDirection::Column,
             align_items: AlignItems::Start,
             justify_content: JustifyContent::Start,
-            width: Val::Px(200.0),
+            width: Val::Percent(100.0),
             padding: UiRect::all(Val::Px(DROPDOWN_PADDING)),
             ..default()
         },

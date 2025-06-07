@@ -52,13 +52,15 @@ macro_rules! many_children {
     };
 }
 
+pub const MODEL_MATRIX_SIZE: f32 = 200.0;
+
 pub fn model_matrix() -> impl Bundle {
     (
         Name::from("Model Matrix"),
         Node {
             display: Display::Grid,
-            width: Val::Px(200.0),
-            height: Val::Px(200.0),
+            width: Val::Px(MODEL_MATRIX_SIZE),
+            height: Val::Px(MODEL_MATRIX_SIZE),
             grid_template_columns: vec![RepeatedGridTrack::flex(4, 1.0)],
             grid_template_rows: vec![RepeatedGridTrack::flex(4, 1.0)],
             justify_content: JustifyContent::Stretch,
@@ -71,7 +73,7 @@ pub fn model_matrix() -> impl Bundle {
         },
         // children![] has a maximum limit of children
         many_children!(
-            hide_ui(),
+            Node::default(),
             circle(Red),
             circle(Green),
             circle(Blue),

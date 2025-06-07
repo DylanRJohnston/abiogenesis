@@ -18,6 +18,7 @@ pub fn control_button(
             padding: UiRect::axes(Val::Px(12.0), Val::Px(8.0)),
             // width: Val::Percent(100.0),
             justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
             ..default()
         },
         Button,
@@ -27,8 +28,8 @@ pub fn control_button(
             // (Text::new(text), Pickable::IGNORE),
             (
                 Node {
-                    width: Val::Px(32.0),
-                    height: Val::Px(32.0),
+                    width: Val::Px(24.0),
+                    height: Val::Px(24.0),
                     ..default()
                 },
                 ImageNode {
