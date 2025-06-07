@@ -121,7 +121,9 @@ fn update_slider_position<R: Resource>(
     }
 
     for (mut node, slider, child_of, children) in node.iter_mut() {
-        let size = containers.get(child_of.0).unwrap().size.x;
+        let container = containers.get(child_of.0).unwrap();
+        let size = container.size.x * container.inverse_scale_factor;
+
         let value = *(slider.lens)(&mut resource);
 
         node.left = Val::Px(remap(
@@ -152,7 +154,8 @@ fn drag<R: Resource>(
     };
 
     let container = containers.get(child_of.0).unwrap();
-    let percentage_change = trigger.delta.x / (container.size.x - SLIDER_SIZE);
+    let percentage_change =
+        trigger.delta.x / (container.size.x * container.inverse_scale_factor - SLIDER_SIZE);
 
     let value = (slider.lens)(&mut params);
 

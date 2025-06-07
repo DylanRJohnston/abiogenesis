@@ -51,6 +51,8 @@ fn contents() -> impl Bundle {
                      mut res_model: ResMut<Model>,
                      mut res_params: ResMut<SimulationParams>| {
                         trigger.propagate(false);
+
+                        // This will bubble up to the dropdown, which will close itself
                         commands.trigger_targets(ToggleState, trigger.target());
 
                         *res_model = *model;

@@ -26,7 +26,7 @@ fn content() -> impl Bundle {
         Node {
             width: Val::Percent(100.0),
             flex_direction: FlexDirection::Column,
-            align_items: AlignItems::End,
+            align_items: AlignItems::Stretch,
             row_gap: Val::Px(8.0),
             column_gap: Val::Px(8.0),
             padding: UiRect::all(Val::Px(8.0)),

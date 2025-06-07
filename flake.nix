@@ -85,6 +85,7 @@
             pkgs.cargo-expand
             pkgs.dioxus-cli
             pkgs.simple-http-server
+            pkgs.sccache
             build-web
             hot
           ];

@@ -15,13 +15,13 @@ pub const BLUE: Color = Color::srgb_from_array([51.0 / 255.0, 136.0 / 255.0, 222
 // pub const ORANGE: Color = Color::srgb_from_array([233.0 / 255.0, 133.0 / 255.0, 55.0 / 255.0]);
 pub const ORANGE: Color = Color::srgb_from_array([233.0 / 255.0, 133.0 / 255.0, 55.0 / 255.0]);
 
-impl Into<Color> for ParticleColour {
-    fn into(self) -> Color {
-        match self {
-            ParticleColour::Red => RED.into(),
-            ParticleColour::Green => GREEN.into(),
-            ParticleColour::Blue => BLUE.into(),
-            ParticleColour::Orange => ORANGE.into(),
+impl From<ParticleColour> for Color {
+    fn from(value: ParticleColour) -> Self {
+        match value {
+            ParticleColour::Red => RED,
+            ParticleColour::Green => GREEN,
+            ParticleColour::Blue => BLUE,
+            ParticleColour::Orange => ORANGE,
         }
     }
 }

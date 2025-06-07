@@ -67,18 +67,18 @@ pub fn model_matrix() -> impl Bundle {
         // children![] has a maximum limit of children
         many_children!(
             Node::default(),
-            circle(RED),
-            circle(GREEN),
-            circle(BLUE),
-            circle(RED),
+            circle(Red),
+            circle(Green),
+            circle(Blue),
+            circle(Red),
             (model_box(Red, Red), BorderRadius::top_left(Val::Px(8.0))),
             model_box(Red, Green),
             (model_box(Red, Blue), BorderRadius::top_right(Val::Px(8.0))),
-            circle(GREEN),
+            circle(Green),
             model_box(Green, Red),
             model_box(Green, Green),
             model_box(Green, Blue),
-            circle(BLUE),
+            circle(Blue),
             (
                 model_box(Blue, Red),
                 BorderRadius::bottom_left(Val::Px(8.0))
