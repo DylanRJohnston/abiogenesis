@@ -18,6 +18,6 @@ pub struct SpatialIndex(SpatialHashGrid<(Entity, ParticleColour)>);
 fn initialise_spatial_index(mut commands: Commands, simulation: SimulationSize) {
     commands.insert_resource(SpatialIndex(SpatialHashGrid::new(
         Rect::from_center_size(Vec2::ZERO, simulation.dimensions()),
-        (10, 10),
+        (19, 10),
     )));
 }

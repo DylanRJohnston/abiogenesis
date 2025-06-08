@@ -11,4 +11,5 @@ impl Plugin for ScenePlugin {
 #[derive(Debug, Clone, Copy, Reflect, States, PartialEq, Eq, Hash)]
 pub enum Scene {
     Sandbox,
+    Challenges,
 }

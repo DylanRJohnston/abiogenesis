@@ -13,7 +13,6 @@ pub enum ParticleColour {
 pub const RED: Color = Color::srgb_from_array([172.0 / 255.0, 40.0 / 255.0, 71.0 / 255.0]);
 pub const GREEN: Color = Color::srgb_from_array([90.0 / 255.0, 181.0 / 255.0, 82.0 / 255.0]);
 pub const BLUE: Color = Color::srgb_from_array([51.0 / 255.0, 136.0 / 255.0, 222.0 / 255.0]);
-// pub const ORANGE: Color = Color::srgb_from_array([233.0 / 255.0, 133.0 / 255.0, 55.0 / 255.0]);
 pub const ORANGE: Color = Color::srgb_from_array([233.0 / 255.0, 133.0 / 255.0, 55.0 / 255.0]);
 
 impl From<ParticleColour> for Color {
@@ -48,11 +47,12 @@ impl ParticleColour {
         }
     }
 
-    pub fn random() -> Self {
-        match rand::thread_rng().gen_range(0..=2) {
-            0 => ParticleColour::Red,
-            1 => ParticleColour::Green,
-            2 => ParticleColour::Blue,
+    pub fn random(particle_variety: usize) -> Self {
+        match rand::thread_rng().gen_range(1..=particle_variety) {
+            1 => ParticleColour::Red,
+            2 => ParticleColour::Green,
+            3 => ParticleColour::Blue,
+            4 => ParticleColour::Orange,
             _ => unreachable!(),
         }
     }

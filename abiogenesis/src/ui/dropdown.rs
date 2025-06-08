@@ -45,6 +45,7 @@ pub fn dropdown(
             width: Val::Percent(100.0),
             overflow: Overflow::clip(),
             height: Val::Px(HEADER_HEIGHT + HEADER_PADDING * 2.0),
+            // grid_column: GridPlacement::start_span(1, 3),
             ..default()
         },
         BorderRadius::all(Val::Px(8.0)),

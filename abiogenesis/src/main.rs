@@ -12,9 +12,11 @@ use particles::ParticlePlugin;
 use ui::UIPlugin;
 
 use crate::{
-    camera::CameraPlugin, controls::ControlsPlugin, scenes::ScenePlugin, systems::AppSystems,
+    browser_state::BrowserStatePlugin, camera::CameraPlugin, controls::ControlsPlugin,
+    scenes::ScenePlugin, systems::AppSystems,
 };
 
+mod browser_state;
 mod bundle_fn;
 mod camera;
 mod controls;
@@ -98,6 +100,7 @@ fn app_systems(app: &mut App) {
         ScenePlugin,
         CameraPlugin,
         ControlsPlugin,
+        BrowserStatePlugin,
     ));
 
     app.configure_sets(

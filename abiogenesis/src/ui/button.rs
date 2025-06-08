@@ -15,7 +15,7 @@ pub fn control_button(
 ) -> impl Bundle {
     (
         Node {
-            padding: UiRect::axes(Val::Px(12.0), Val::Px(8.0)),
+            padding: UiRect::axes(Val::Px(8.0), Val::Px(8.0)),
             // width: Val::Percent(100.0),
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,

@@ -1,11 +1,12 @@
 use bevy::math::{Rect, Vec2};
+use itertools::Itertools;
 
 #[derive(Debug, Clone)]
 pub struct SpatialHashGrid<T> {
-    cells: Vec<Vec<(Vec2, T)>>,
-    bounds: Rect,
-    cell_count: (usize, usize),
-    cell_size: Vec2,
+    pub cells: Vec<Vec<(Vec2, T)>>,
+    pub bounds: Rect,
+    pub cell_count: (usize, usize),
+    pub cell_size: Vec2,
 }
 
 impl<T> SpatialHashGrid<T> {
@@ -58,7 +59,7 @@ impl<T> SpatialHashGrid<T> {
             })
     }
 
-    fn toroidal_distance(&self, a: Vec2, b: Vec2) -> f32 {
+    pub fn toroidal_distance(&self, a: Vec2, b: Vec2) -> f32 {
         let width = self.bounds.max.x - self.bounds.min.x;
         let height = self.bounds.max.y - self.bounds.min.y;
 
@@ -76,25 +77,25 @@ impl<T> SpatialHashGrid<T> {
         (dx * dx + dy * dy).sqrt()
     }
 
-    fn world_to_grid(&self, pos: Vec2) -> (i32, i32) {
+    pub fn world_to_grid(&self, pos: Vec2) -> (i32, i32) {
         let grid_x = ((pos.x - self.bounds.min.x) / self.cell_size.x).floor() as i32;
         let grid_y = ((pos.y - self.bounds.min.y) / self.cell_size.y).floor() as i32;
 
         (grid_x, grid_y)
     }
 
-    fn wrap_coordinates(&self, (x, y): (i32, i32)) -> (i32, i32) {
+    pub fn wrap_coordinates(&self, (x, y): (i32, i32)) -> (i32, i32) {
         (
             (x % self.cell_count.0 as i32 + self.cell_count.0 as i32) % self.cell_count.0 as i32,
             (y % self.cell_count.1 as i32 + self.cell_count.1 as i32) % self.cell_count.1 as i32,
         )
     }
 
-    fn grid_to_index(&self, (x, y): (i32, i32)) -> usize {
+    pub fn grid_to_index(&self, (x, y): (i32, i32)) -> usize {
         (y * self.cell_count.0 as i32 + x) as usize
     }
 
-    fn get_query_cells(&self, pos: Vec2, radius: f32) -> impl Iterator<Item = (i32, i32)> {
+    pub fn get_query_cells(&self, pos: Vec2, radius: f32) -> impl Iterator<Item = (i32, i32)> {
         let (grid_x, grid_y) = self.world_to_grid(pos);
 
         gen move {

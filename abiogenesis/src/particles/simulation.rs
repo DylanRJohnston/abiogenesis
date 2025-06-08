@@ -1,6 +1,7 @@
 use std::ops::RangeInclusive;
 
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     math::{TorodialMath, remap},
@@ -30,7 +31,7 @@ pub const PEAK_ATTRACTION_RADIUS_RANGE: RangeInclusive<f32> = 0.0..=200.0;
 pub const REPULSION_RADIUS_RANGE: RangeInclusive<f32> = 0.0..=200.0;
 pub const DECAY_RATE_RANGE: RangeInclusive<f32> = 0.0..=200.0;
 
-#[derive(Debug, Reflect, Resource, Clone, Copy)]
+#[derive(Debug, Reflect, Resource, Clone, Copy, Serialize, Deserialize)]
 #[reflect(Resource)]
 pub struct SimulationParams {
     pub friction: f32,
@@ -39,6 +40,7 @@ pub struct SimulationParams {
     pub repulsion_radius: f32,
     pub attraction_radius: f32,
     pub decay_rate: f32,
+    pub num_colours: usize,
 }
 
 const INTERACTION_RADIUS: f32 = 75.0;
@@ -51,7 +53,14 @@ impl SimulationParams {
         repulsion_radius: INTERACTION_RADIUS / 3.0,
         attraction_radius: INTERACTION_RADIUS,
         decay_rate: 100.0,
+        num_colours: 3,
     };
+}
+
+impl Default for SimulationParams {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
 }
 
 #[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
@@ -81,6 +90,18 @@ fn compute_forces(
     let iter = particles.par_iter_mut();
 
     iter.for_each(|(entity, mut transform, mut velocity, a_color)| {
+        // Too many particles being in the same place is bad for performance
+        // It is the degenerate case for the spatial hash
+        // let too_crowded = spatial_index
+        //     .query(
+        //         transform.translation.truncate(),
+        //         params.attraction_radius * 2.0,
+        //     )
+        //     .nth(500)
+        //     .is_some();
+
+        let too_crowded = false;
+
         let force = spatial_index
             .query(transform.translation.truncate(), params.attraction_radius)
             .filter(|(_, (it, _))| *it != entity)
@@ -93,6 +114,11 @@ fn compute_forces(
                     model.weights[a_color.index()][b_color.index()],
                     displacement.length(),
                 );
+
+                // Too crowded, turn off attractive forces
+                if too_crowded && magnitude > 0.0 {
+                    return Vec2::ZERO;
+                }
 
                 magnitude * params.force_strength * displacement.normalize()
             })

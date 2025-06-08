@@ -60,6 +60,7 @@ pub fn toolbar() -> impl Bundle {
             align_self: AlignSelf::Center,
             align_items: AlignItems::Center,
             justify_content: JustifyContent::Start,
+            bottom: Val::Px(-100.),
             ..default()
         },
         BackgroundColor(UI_BACKGROUND),
@@ -68,7 +69,7 @@ pub fn toolbar() -> impl Bundle {
         observe(update_toolbar_select),
         Animator::new(Tween::new(
             EaseFunction::SmootherStepOut,
-            Duration::from_secs_f32(1.),
+            Duration::from_secs_f32(1.5),
             BottomLens {
                 start: -100.,
                 end: 0.0,
@@ -298,6 +299,17 @@ pub fn smite_hover(
 #[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
 pub fn smite_end_hover(
     _trigger: Trigger<Pointer<Out>>,
+    hover_region: Query<Entity, With<HoverRegion>>,
+    mut commands: Commands,
+) {
+    for entity in hover_region.iter() {
+        commands.entity(entity).despawn();
+    }
+}
+
+#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
+pub fn smite_end_click(
+    _trigger: Trigger<Pointer<Pressed>>,
     hover_region: Query<Entity, With<HoverRegion>>,
     mut commands: Commands,
 ) {

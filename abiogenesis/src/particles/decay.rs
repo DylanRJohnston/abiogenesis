@@ -58,7 +58,7 @@ fn particle_decay(
             }
         }
 
-        let colour = ParticleColour::random();
+        let colour = ParticleColour::random(params.num_colours);
 
         commands.entity(particle_index).insert((
             Transform::from_translation(

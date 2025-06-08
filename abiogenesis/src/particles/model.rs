@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use rand::Rng;
+use serde::{Deserialize, Deserializer, Serialize, Serializer, ser::SerializeSeq};
 
 use crate::particles::{
     particle::{Particle, ParticleIndex},
@@ -36,6 +37,7 @@ pub const PRESETS: [(&str, Model, SimulationParams); 8] = [
             peak_attraction_radius: 80.0,
             repulsion_radius: 20.0,
             decay_rate: 80.0,
+            ..SimulationParams::DEFAULT
         },
     ),
     (
@@ -50,6 +52,7 @@ pub const PRESETS: [(&str, Model, SimulationParams); 8] = [
             peak_attraction_radius: 20.0,
             repulsion_radius: 40.0,
             decay_rate: 80.0,
+            ..SimulationParams::DEFAULT
         },
     ),
     (
@@ -71,6 +74,7 @@ pub const PRESETS: [(&str, Model, SimulationParams); 8] = [
             peak_attraction_radius: 120.0,
             repulsion_radius: 110.0,
             decay_rate: 60.0,
+            ..SimulationParams::DEFAULT
         },
     ),
     (
@@ -85,6 +89,7 @@ pub const PRESETS: [(&str, Model, SimulationParams); 8] = [
             peak_attraction_radius: 120.0,
             repulsion_radius: 40.0,
             decay_rate: 100.0,
+            ..SimulationParams::DEFAULT
         },
     ),
     (
@@ -105,10 +110,46 @@ impl Plugin for ModelPlugin {
     }
 }
 
-#[derive(Debug, Reflect, Resource, Clone, Copy, Deref, DerefMut)]
+#[derive(Debug, Reflect, Resource, Clone, Copy, Deref, DerefMut, Serialize, Deserialize)]
 pub struct Model {
     #[deref]
+    #[serde(
+        serialize_with = "model_serializer",
+        deserialize_with = "model_deserializer"
+    )]
     pub weights: [[f32; 3]; 3],
+}
+
+fn model_serializer<S>(weights: &[[f32; 3]; 3], serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    let mut seq = serializer.serialize_seq(Some(3))?;
+    for row in weights {
+        let formatted_row: [i32; 3] = [
+            (row[0] * 100.0).round() as i32,
+            (row[1] * 100.0).round() as i32,
+            (row[2] * 100.0).round() as i32,
+        ];
+        seq.serialize_element(&formatted_row)?;
+    }
+    seq.end()
+}
+
+fn model_deserializer<'de, D>(deserializer: D) -> Result<[[f32; 3]; 3], D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let string_weights: [[i32; 3]; 3] = Deserialize::deserialize(deserializer)?;
+
+    let mut result = [[0.0f32; 3]; 3];
+    for (i, row) in string_weights.iter().enumerate() {
+        for (j, s) in row.iter().enumerate() {
+            result[i][j] = *s as f32 / 100.0;
+        }
+    }
+
+    Ok(result)
 }
 
 #[derive(Debug, Event, Clone, Copy, Reflect)]
