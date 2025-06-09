@@ -32,6 +32,8 @@ impl Tool {
             Tool::Particle(ParticleColour::Green) => 3,
             Tool::Particle(ParticleColour::Blue) => 4,
             Tool::Particle(ParticleColour::Orange) => 5,
+            Tool::Particle(ParticleColour::Pink) => 6,
+            Tool::Particle(ParticleColour::Aqua) => 7,
         }
     }
 }

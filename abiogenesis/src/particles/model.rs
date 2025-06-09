@@ -1,155 +1,196 @@
+use core::num;
+use std::sync::LazyLock;
+
 use bevy::prelude::*;
+use itertools::Itertools;
 use rand::Rng;
+use rand_distr::{Distribution, Normal};
 use serde::{Deserialize, Deserializer, Serialize, Serializer, ser::SerializeSeq};
 
 use crate::particles::{
+    colour::{NUM_COLOURS, ParticleColour},
     particle::{Particle, ParticleIndex},
     simulation::{
         ATTRACTION_RADIUS_RANGE, FORCE_STRENGTH_RANGE, FRICTION_RANGE,
-        PEAK_ATTRACTION_RADIUS_RANGE, SimulationParams,
+        PEAK_ATTRACTION_RADIUS_RANGE, REPULSION_RADIUS_RANGE, SimulationParams,
     },
 };
 
-pub const PRESETS: [(&str, Model, SimulationParams); 8] = [
-    (
-        "The First Garden",
-        Model {
-            weights: [[0.3, 0.4, 0.5], [0.7, -0.4, 0.3], [-0.5, 0.5, 0.0]],
-        },
-        SimulationParams::DEFAULT,
-    ),
-    (
-        "Circle of Life",
-        Model {
-            weights: [[-0.2, 0.2, 0.8], [0.0, 0.7, 0.3], [0.6, 0.3, -0.5]],
-        },
-        SimulationParams::DEFAULT,
-    ),
-    (
-        "Jörmungandr",
-        Model {
-            weights: [[-0.8, 0.7, 0.7], [0.7, -0.8, 0.7], [0.3, 0.7, -0.8]],
-        },
-        SimulationParams {
-            friction: 2.5,
-            force_strength: 100.0,
-            attraction_radius: 120.0,
-            peak_attraction_radius: 80.0,
-            repulsion_radius: 20.0,
-            decay_rate: 80.0,
-            ..SimulationParams::DEFAULT
-        },
-    ),
-    (
-        "Predation",
-        Model {
-            weights: [[0.9, -0.8, -0.9], [-0.1, 0.9, -0.4], [0.6, 0.8, -0.5]],
-        },
-        SimulationParams {
-            friction: 2.5,
-            force_strength: 80.0,
-            attraction_radius: 100.0,
-            peak_attraction_radius: 20.0,
-            repulsion_radius: 40.0,
-            decay_rate: 80.0,
-            ..SimulationParams::DEFAULT
-        },
-    ),
-    (
-        "Endless Chase",
-        Model {
-            weights: [[1.0, 0.2, 0.0], [0.0, 1.0, 0.2], [0.2, 0.0, 1.0]],
-        },
-        SimulationParams::DEFAULT,
-    ),
-    (
-        "The Trinity",
-        Model {
-            weights: [[0.3, 0.4, 0.5], [0.7, -0.4, 0.3], [-0.5, 0.5, 0.0]],
-        },
-        SimulationParams {
-            friction: 5.0,
-            force_strength: 180.0,
-            attraction_radius: 200.0,
-            peak_attraction_radius: 120.0,
-            repulsion_radius: 110.0,
-            decay_rate: 60.0,
-            ..SimulationParams::DEFAULT
-        },
-    ),
-    (
-        "Divine Engine",
-        Model {
-            weights: [[-0.1, 0.7, 0.0], [0.0, -0.1, 0.7], [0.7, 0.0, -0.1]],
-        },
-        SimulationParams {
-            friction: 5.0,
-            force_strength: 120.,
-            attraction_radius: 200.0,
-            peak_attraction_radius: 120.0,
-            repulsion_radius: 40.0,
-            decay_rate: 100.0,
-            ..SimulationParams::DEFAULT
-        },
-    ),
-    (
-        "Heath Death",
-        Model {
-            weights: [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
-        },
-        SimulationParams::DEFAULT,
-    ),
-];
+pub const NUM_PRESETS: usize = 8;
+pub const PRESETS: LazyLock<[(&str, Model, SimulationParams); NUM_PRESETS]> = LazyLock::new(|| {
+    [
+        (
+            "The First Garden",
+            Model::from_3x3(
+                [[0.3, 0.4, 0.5], [0.7, -0.4, 0.3], [-0.5, 0.5, 0.0]],
+                NUM_COLOURS,
+            ),
+            SimulationParams::DEFAULT,
+        ),
+        (
+            "Circle of Life",
+            Model::from_3x3(
+                [[-0.2, 0.2, 0.8], [0.0, 0.7, 0.3], [0.6, 0.3, -0.5]],
+                NUM_COLOURS,
+            ),
+            SimulationParams::DEFAULT,
+        ),
+        (
+            "Jörmungandr",
+            Model::from_3x3(
+                [[-0.8, 0.7, 0.7], [0.7, -0.8, 0.7], [0.3, 0.7, -0.8]],
+                NUM_COLOURS,
+            ),
+            SimulationParams {
+                friction: 2.5,
+                force_strength: 100.0,
+                attraction_radius: 120.0,
+                peak_attraction_radius: 80.0,
+                repulsion_radius: 20.0,
+                decay_rate: 80.0,
+                ..SimulationParams::DEFAULT
+            },
+        ),
+        (
+            "Predation",
+            Model::from_3x3(
+                [[0.9, -0.8, -0.9], [-0.1, 0.9, -0.4], [0.6, 0.8, -0.5]],
+                NUM_COLOURS,
+            ),
+            SimulationParams {
+                friction: 2.5,
+                force_strength: 80.0,
+                attraction_radius: 100.0,
+                peak_attraction_radius: 20.0,
+                repulsion_radius: 40.0,
+                decay_rate: 80.0,
+                ..SimulationParams::DEFAULT
+            },
+        ),
+        (
+            "Endless Chase",
+            Model::from_3x3(
+                [[1.0, 0.2, 0.0], [0.0, 1.0, 0.2], [0.2, 0.0, 1.0]],
+                NUM_COLOURS,
+            ),
+            SimulationParams::DEFAULT,
+        ),
+        (
+            "The Trinity",
+            Model::from_3x3(
+                [[0.3, 0.4, 0.5], [0.7, -0.4, 0.3], [-0.5, 0.5, 0.0]],
+                NUM_COLOURS,
+            ),
+            SimulationParams {
+                friction: 5.0,
+                force_strength: 180.0,
+                attraction_radius: 200.0,
+                peak_attraction_radius: 120.0,
+                repulsion_radius: 110.0,
+                decay_rate: 60.0,
+                ..SimulationParams::DEFAULT
+            },
+        ),
+        (
+            "Divine Engine",
+            Model::from_3x3(
+                [[-0.1, 0.7, 0.0], [0.0, -0.1, 0.7], [0.7, 0.0, -0.1]],
+                NUM_COLOURS,
+            ),
+            SimulationParams {
+                friction: 5.0,
+                force_strength: 120.,
+                attraction_radius: 200.0,
+                peak_attraction_radius: 120.0,
+                repulsion_radius: 40.0,
+                decay_rate: 100.0,
+                ..SimulationParams::DEFAULT
+            },
+        ),
+        (
+            "Heath Death",
+            Model::from_3x3(
+                [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+                NUM_COLOURS,
+            ),
+            SimulationParams::DEFAULT,
+        ),
+    ]
+});
 
 pub struct ModelPlugin;
 impl Plugin for ModelPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(PRESETS[0].1)
+        app.insert_resource(PRESETS[0].1.clone())
             .add_observer(randomise_model)
             .add_observer(clear_particles);
     }
 }
 
-#[derive(Debug, Reflect, Resource, Clone, Copy, Deref, DerefMut, Serialize, Deserialize)]
+#[derive(Debug, Reflect, Resource, Clone, Deref, DerefMut, Serialize, Deserialize)]
 pub struct Model {
     #[deref]
     #[serde(
         serialize_with = "model_serializer",
         deserialize_with = "model_deserializer"
     )]
-    pub weights: [[f32; 3]; 3],
+    weights: Vec<f32>,
+    num_colours: usize,
 }
 
-fn model_serializer<S>(weights: &[[f32; 3]; 3], serializer: S) -> Result<S::Ok, S::Error>
+impl Model {
+    pub fn from_3x3(weights: [[f32; 3]; 3], num_colours: usize) -> Self {
+        Self {
+            weights: weights
+                .into_iter()
+                .flat_map(|row| row.into_iter().chain((3..num_colours).map(|_| 0.0)))
+                .chain((3..num_colours).flat_map(|_| (0..num_colours).map(|_| 0.0)))
+                .collect(),
+            num_colours: num_colours,
+        }
+    }
+
+    pub fn weight(&self, source: ParticleColour, target: ParticleColour) -> f32 {
+        debug_assert!(
+            source.index() < self.num_colours && target.index() < self.num_colours,
+            "Invalid particle colour index: source: {}, target: {}",
+            source,
+            target
+        );
+
+        self.weights[source.index() * self.num_colours + target.index()]
+    }
+
+    pub fn set_weight(&mut self, source: ParticleColour, target: ParticleColour, value: f32) {
+        debug_assert!(
+            source.index() < self.num_colours && target.index() < self.num_colours,
+            "Invalid particle colour index: source: {}, target: {}",
+            source,
+            target
+        );
+
+        self.weights[source.index() * self.num_colours + target.index()] = value;
+    }
+}
+
+fn model_serializer<S>(weights: &Vec<f32>, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
-    let mut seq = serializer.serialize_seq(Some(3))?;
-    for row in weights {
-        let formatted_row: [i32; 3] = [
-            (row[0] * 100.0).round() as i32,
-            (row[1] * 100.0).round() as i32,
-            (row[2] * 100.0).round() as i32,
-        ];
-        seq.serialize_element(&formatted_row)?;
+    let mut seq = serializer.serialize_seq(Some(weights.len()))?;
+    for weight in weights {
+        seq.serialize_element(&((weight * 100.0).round() as i32))?;
     }
     seq.end()
 }
 
-fn model_deserializer<'de, D>(deserializer: D) -> Result<[[f32; 3]; 3], D::Error>
+fn model_deserializer<'de, D>(deserializer: D) -> Result<Vec<f32>, D::Error>
 where
     D: Deserializer<'de>,
 {
-    let string_weights: [[i32; 3]; 3] = Deserialize::deserialize(deserializer)?;
+    let integer_weights: Vec<i32> = Deserialize::deserialize(deserializer)?;
 
-    let mut result = [[0.0f32; 3]; 3];
-    for (i, row) in string_weights.iter().enumerate() {
-        for (j, s) in row.iter().enumerate() {
-            result[i][j] = *s as f32 / 100.0;
-        }
-    }
-
-    Ok(result)
+    Ok(integer_weights.iter().map(|&i| i as f32 / 100.0).collect())
 }
 
 #[derive(Debug, Event, Clone, Copy, Reflect)]
@@ -169,15 +210,32 @@ fn randomise_model(
         1.0..=(params.force_strength / *FORCE_STRENGTH_RANGE.end()) * FRICTION_RANGE.end(),
     );
 
-    params.attraction_radius = rng.gen_range(60.0..=*ATTRACTION_RADIUS_RANGE.end());
-    params.peak_attraction_radius = rng.gen_range(0.0..=*PEAK_ATTRACTION_RADIUS_RANGE.end());
-    params.repulsion_radius =
-        rng.gen_range((params.attraction_radius / 10.0)..=(params.attraction_radius * 0.6));
+    params.attraction_radius = Normal::<f32>::new(75.0, 25.0)
+        .unwrap()
+        .sample(&mut rng)
+        .clamp(20.0, *ATTRACTION_RADIUS_RANGE.end());
 
-    model.weights.iter_mut().for_each(|row| {
-        row.iter_mut().for_each(|value| {
-            *value = rand::random::<f32>() * 2.0 - 1.0;
-        })
+    params.peak_attraction_radius = Normal::<f32>::new(
+        params.attraction_radius * 0.6,
+        params.attraction_radius * 0.5,
+    )
+    .unwrap()
+    .sample(&mut rng)
+    .clamp(0.0, *PEAK_ATTRACTION_RADIUS_RANGE.end());
+
+    params.repulsion_radius = Normal::<f32>::new(
+        params.attraction_radius * 0.4,
+        params.attraction_radius * 0.3,
+    )
+    .unwrap()
+    .sample(&mut rng)
+    .clamp(
+        20.0_f32.min(params.attraction_radius),
+        REPULSION_RADIUS_RANGE.end().min(params.attraction_radius),
+    );
+
+    model.weights.iter_mut().for_each(|value| {
+        *value = rand::random::<f32>() * 2.0 - 1.0;
     });
 }
 

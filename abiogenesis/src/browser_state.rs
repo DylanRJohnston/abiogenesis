@@ -61,7 +61,7 @@ mod wasm {
     pub fn export(trigger: Trigger<Export>, params: Res<SimulationParams>, model: Res<Model>) {
         let state = State {
             params: *params,
-            model: *model,
+            model: model.clone(),
         };
 
         wasm_set_state(serde_wasm_bindgen::to_value(&state).unwrap());

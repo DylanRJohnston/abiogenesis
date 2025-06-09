@@ -6,7 +6,7 @@ use bevy_tweening::{Animator, Delay, Sequence, Tween};
 use crate::{
     observe::observe,
     ui::{
-        Layout, Sidebar,
+        Sidebar,
         colours::{UI_BACKGROUND, UI_BACKGROUND_FOCUSED},
         icon::Icon,
         lenses::{BottomLens, LeftLens, TopLens},
@@ -38,23 +38,17 @@ pub fn hide_ui() -> impl Bundle {
         observe(
             |mut trigger: Trigger<Pointer<Click>>,
              mut commands: Commands,
-             sidebar: Single<(Entity, &Sidebar)>,
+             sidebar: Single<Entity, With<Sidebar>>,
              toolbar: Single<Entity, With<ToolBar>>,
              show_ui: Single<Entity, With<ShowUIButton>>| {
                 trigger.propagate(false);
 
-                let (sidebar, &Sidebar(layout)) = *sidebar;
-
-                commands.entity(sidebar).insert(Animator::new(Tween::new(
+                commands.entity(*sidebar).insert(Animator::new(Tween::new(
                     EaseFunction::SmootherStepIn,
                     Duration::from_secs_f32(1.),
                     LeftLens {
                         start: 0.,
-                        end: if layout == Layout::Horizontal {
-                            -500.0
-                        } else {
-                            -250.0
-                        },
+                        end: -250.,
                     },
                 )));
 
@@ -113,24 +107,18 @@ pub fn show_ui_button() -> impl Bundle {
         observe(
             |mut trigger: Trigger<Pointer<Click>>,
              mut commands: Commands,
-             sidebar: Single<(Entity, &Sidebar)>,
+             sidebar: Single<Entity, With<Sidebar>>,
              toolbar: Single<Entity, With<ToolBar>>,
              show_ui: Single<Entity, With<ShowUIButton>>| {
                 trigger.propagate(false);
 
-                let (sidebar, &Sidebar(layout)) = *sidebar;
-
-                commands.entity(sidebar).insert(Animator::new(
+                commands.entity(*sidebar).insert(Animator::new(
                     Sequence::from_single(Delay::new(Duration::from_secs_f32(0.4))).then(
                         Tween::new(
                             EaseFunction::SmootherStepOut,
                             Duration::from_secs_f32(1.),
                             LeftLens {
-                                start: if layout == Layout::Horizontal {
-                                    -500.0
-                                } else {
-                                    -250.0
-                                },
+                                start: -250.,
                                 end: 0.,
                             },
                         ),

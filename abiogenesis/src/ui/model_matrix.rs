@@ -1,11 +1,4 @@
-use bevy::{
-    color::palettes::{
-        css::{BLACK, GREY, YELLOW},
-        tailwind::{YELLOW_100, YELLOW_600, YELLOW_900},
-    },
-    ecs::spawn::SpawnWith,
-    prelude::*,
-};
+use bevy::{ecs::spawn::SpawnWith, prelude::*};
 
 mod circle;
 mod model_box;
@@ -13,12 +6,9 @@ mod model_box;
 use circle::*;
 use model_box::*;
 
-use crate::{
-    particles::{
-        colour::{ParticleColour::*, *},
-        model::Model,
-    },
-    ui::menu_button::hide_ui,
+use crate::particles::{
+    colour::{ParticleColour::*, *},
+    model::Model,
 };
 
 const MID_COLOR: Color = Color::Srgba(Srgba::rgb(233.0 / 255.0, 133.0 / 255.0, 55.0 / 255.0));
@@ -33,7 +23,7 @@ pub fn update_model_matrix(
     model: Res<Model>,
 ) {
     for (value, mut colour, children) in elements.iter_mut() {
-        let value = model[value.source.index()][value.target.index()];
+        let value = model.weight(value.source, value.target);
 
         **(text.get_mut(children[0]).unwrap()) = format!("{value:.0}", value = value * 10.0);
 
@@ -57,8 +47,12 @@ macro_rules! many_children {
 
 pub const MODEL_MATRIX_SIZE: f32 = 200.0;
 
+#[derive(Component)]
+struct ModelMatrix;
+
 pub fn model_matrix() -> impl Bundle {
     (
+        ModelMatrix,
         Name::from("Model Matrix"),
         Node {
             display: Display::Grid,
@@ -101,3 +95,6 @@ pub fn model_matrix() -> impl Bundle {
         ),
     )
 }
+
+#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
+fn update_matrix_size() {}

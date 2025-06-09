@@ -18,7 +18,7 @@ impl Plugin for TitleScreenPlugin {
 
 #[cfg_attr(
     feature = "hot_reload",
-    bevy_simple_subsecond_system::hot(rerun_on_hot_patch = true)
+    bevy_simple_subsecond_system::hot(rerun_on_hot_patch = false)
 )]
 fn spawn_title_screen(mut commands: Commands, title_screens: Query<Entity, With<TitleScreen>>) {
     title_screens

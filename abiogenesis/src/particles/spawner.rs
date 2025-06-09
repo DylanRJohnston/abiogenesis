@@ -33,6 +33,8 @@ pub struct ParticleAssets {
     green: Handle<ColorMaterial>,
     blue: Handle<ColorMaterial>,
     orange: Handle<ColorMaterial>,
+    pink: Handle<ColorMaterial>,
+    aqua: Handle<ColorMaterial>,
 }
 
 impl ParticleAssets {
@@ -42,6 +44,8 @@ impl ParticleAssets {
             ParticleColour::Green => self.green.clone(),
             ParticleColour::Blue => self.blue.clone(),
             ParticleColour::Orange => self.orange.clone(),
+            ParticleColour::Pink => self.pink.clone(),
+            ParticleColour::Aqua => self.aqua.clone(),
         }
     }
 }
@@ -56,6 +60,8 @@ fn init_assets(
     let green = materials.add(Color::from(GREEN));
     let blue = materials.add(Color::from(BLUE));
     let orange = materials.add(Color::from(ORANGE));
+    let pink = materials.add(Color::from(PINK));
+    let aqua = materials.add(Color::from(AQUA));
 
     commands.insert_resource(ParticleAssets {
         mesh,
@@ -63,6 +69,8 @@ fn init_assets(
         green,
         blue,
         orange,
+        pink,
+        aqua,
     });
 }
 
@@ -98,10 +106,13 @@ fn respawn_particles(
     };
 
     (0..MAX_PARTICLES).for_each(|i| {
-        let color = match i % 3 {
+        let color = match i % params.num_colours {
             0 => ParticleColour::Red,
             1 => ParticleColour::Green,
             2 => ParticleColour::Blue,
+            3 => ParticleColour::Orange,
+            4 => ParticleColour::Pink,
+            5 => ParticleColour::Aqua,
             _ => unreachable!(),
         };
 

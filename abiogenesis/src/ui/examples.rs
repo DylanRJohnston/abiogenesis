@@ -3,7 +3,7 @@ use bevy::{ecs::spawn::SpawnIter, prelude::*};
 use crate::{
     observe::observe,
     particles::{
-        model::{Model, PRESETS},
+        model::{Model, NUM_PRESETS, PRESETS},
         simulation::SimulationParams,
     },
     ui::{
@@ -14,7 +14,6 @@ use crate::{
     },
 };
 
-const NUM_PRESETS: usize = PRESETS.len();
 const VERTICAL_PADDING: f32 = 4.0;
 const FONT_SIZE: f32 = 24.0;
 const TOTAL_HEIGHT: f32 =
@@ -41,32 +40,34 @@ fn contents() -> impl Bundle {
             padding: UiRect::all(Val::Px(DROPDOWN_PADDING)),
             ..default()
         },
-        Children::spawn(SpawnIter(PRESETS.iter().map(|(name, model, params)| {
-            (
-                Node {
-                    padding: UiRect::axes(Val::Px(8.0), Val::Px(VERTICAL_PADDING)),
-                    align_items: AlignItems::Center,
-                    width: Val::Percent(100.0),
-                    ..default()
-                },
-                BorderRadius::all(Val::Px(4.0)),
-                mixins::hover_colour(Color::NONE, UI_BACKGROUND_FOCUSED),
-                children![(Text::from(*name), Pickable::IGNORE)],
-                observe(
-                    |mut trigger: Trigger<Pointer<Click>>,
-                     mut commands: Commands,
-                     mut res_model: ResMut<Model>,
-                     mut res_params: ResMut<SimulationParams>| {
-                        trigger.propagate(false);
-
-                        // This will bubble up to the dropdown, which will close itself
-                        commands.trigger_targets(ToggleState, trigger.target());
-
-                        *res_model = *model;
-                        *res_params = *params;
+        Children::spawn(SpawnIter(PRESETS.clone().into_iter().map(
+            |(name, model, params)| {
+                (
+                    Node {
+                        padding: UiRect::axes(Val::Px(8.0), Val::Px(VERTICAL_PADDING)),
+                        align_items: AlignItems::Center,
+                        width: Val::Percent(100.0),
+                        ..default()
                     },
-                ),
-            )
-        }))),
+                    BorderRadius::all(Val::Px(4.0)),
+                    mixins::hover_colour(Color::NONE, UI_BACKGROUND_FOCUSED),
+                    children![(Text::from(name), Pickable::IGNORE)],
+                    observe({
+                        move |mut trigger: Trigger<Pointer<Click>>,
+                              mut commands: Commands,
+                              mut res_model: ResMut<Model>,
+                              mut res_params: ResMut<SimulationParams>| {
+                            trigger.propagate(false);
+
+                            // This will bubble up to the dropdown, which will close itself
+                            commands.trigger_targets(ToggleState, trigger.target());
+
+                            *res_model = model.clone();
+                            *res_params = params.clone();
+                        }
+                    }),
+                )
+            },
+        ))),
     )
 }

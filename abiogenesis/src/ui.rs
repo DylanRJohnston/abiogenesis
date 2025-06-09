@@ -46,68 +46,22 @@ impl Plugin for UIPlugin {
         app.add_plugins(ToolBarPlugin)
             .add_plugins(LensPlugin)
             .add_plugins(TitleScreenPlugin)
-            .add_systems(Startup, detect_layout)
             .add_systems(Update, update_model_matrix.in_set(AppSystems::Update))
-            .add_systems(Update, on_window_resized);
+            .add_systems(PreUpdate, calculate_ui_scale);
     }
 }
 
-#[derive(Debug, Event, Resource, Reflect, PartialEq, Eq, Copy, Clone)]
-pub enum Layout {
-    Horizontal,
-    Vertical,
-}
-
-impl Layout {
-    fn flex_direction(&self) -> FlexDirection {
-        match self {
-            Layout::Horizontal => FlexDirection::Row,
-            Layout::Vertical => FlexDirection::Column,
-        }
-    }
-}
-
-fn decide_layout(width: f32, height: f32) -> Layout {
-    // if width > 630.0 {
-    //     if height < 590.0 {
-    //         Layout::Horizontal
-    //     } else {
-    //         Layout::Vertical
-    //     }
-    // } else {
-    //     if height < 710.0 {
-    //         Layout::Horizontal
-    //     } else {
-    //         Layout::Vertical
-    //     }
-    // }
-    Layout::Vertical
-}
-
-fn detect_layout(window: Single<&Window>, mut commands: Commands) {
-    commands.insert_resource(decide_layout(window.width(), window.height()));
-}
-
-#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
-fn on_window_resized(
-    window: Single<&Window>,
+#[cfg_attr(
+    feature = "hot_reload",
+    bevy_simple_subsecond_system::hot(rerun_on_hot_patch = true)
+)]
+fn calculate_ui_scale(
     mut resize_reader: EventReader<WindowResized>,
-    mut layout: ResMut<Layout>,
-    mut commands: Commands,
+    mut ui_scale: ResMut<UiScale>,
 ) {
-    if resize_reader.read().count() == 0 {
-        return;
+    if let Some(e) = resize_reader.read().last() {
+        ui_scale.0 = e.height / 720.;
     }
-
-    tracing::info!(width = ?window.width(), height = ?window.height());
-
-    let new_layout = decide_layout(window.width(), window.height());
-    if new_layout == *layout {
-        return;
-    }
-
-    *layout = new_layout;
-    commands.run_system_cached(respawn_ui);
 }
 
 #[derive(Debug, Component, Reflect)]
@@ -120,7 +74,6 @@ pub struct UIRoot;
 pub fn respawn_ui(
     mut commands: Commands,
     icons: Res<AssetServer>,
-    layout: Res<Layout>,
     roots: Query<Entity, With<UIRoot>>,
 ) {
     roots
@@ -132,17 +85,13 @@ pub fn respawn_ui(
         children![
             show_ui_button(),
             (
-                sidebar(*layout),
+                sidebar(),
                 mixins::block_all_interactions(),
                 Animator::new(Tween::new(
                     EaseFunction::SmootherStepOut,
                     Duration::from_secs_f32(1.5),
                     LeftLens {
-                        start: if *layout == Layout::Horizontal {
-                            -500.0
-                        } else {
-                            -250.0
-                        },
+                        start: -250.0,
                         end: 0.0,
                     }
                 )),
@@ -216,16 +165,16 @@ fn full_screen_container() -> impl Bundle {
     )
 }
 
-#[derive(Debug, Component, Deref, Clone, Copy)]
-pub struct Sidebar(Layout);
+#[derive(Debug, Component, Clone, Copy)]
+pub struct Sidebar;
 
-fn sidebar(direction: Layout) -> impl Bundle {
+fn sidebar() -> impl Bundle {
     (
-        Sidebar(direction),
+        Sidebar,
         Node {
             padding: UiRect::all(Val::Px(8.0)),
             display: Display::Flex,
-            flex_direction: direction.flex_direction(),
+            flex_direction: FlexDirection::Column,
             row_gap: Val::Px(4.0),
             column_gap: Val::Px(16.0),
             left: Val::Px(-250.0),

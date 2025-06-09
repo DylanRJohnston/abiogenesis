@@ -53,7 +53,7 @@ impl SimulationParams {
         repulsion_radius: INTERACTION_RADIUS / 3.0,
         attraction_radius: INTERACTION_RADIUS,
         decay_rate: 100.0,
-        num_colours: 3,
+        num_colours: 6,
     };
 }
 
@@ -111,7 +111,7 @@ fn compute_forces(
 
                 let magnitude = magnitude(
                     &params,
-                    model.weights[a_color.index()][b_color.index()],
+                    model.weight(*a_color, *b_color),
                     displacement.length(),
                 );
 

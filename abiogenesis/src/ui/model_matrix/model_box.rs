@@ -67,7 +67,7 @@ fn drag_start(
     };
 
     commands.entity(trigger.target).insert(DragStartValue(
-        SLIDER_SCALAR * model[index.source.index()][index.target.index()],
+        SLIDER_SCALAR * model.weight(index.source, index.target),
     ));
 }
 
@@ -93,8 +93,11 @@ fn drag(
 
     color.0 = color.0.with_alpha(1.0);
     node.left = Val::Px(trigger.distance.x.clamp(lower_bound, upper_bound));
-    model[index.source.index()][index.target.index()] =
-        ((**start_value + trigger.distance.x) / SLIDER_SCALAR).clamp(-1.0, 1.0);
+    model.set_weight(
+        index.source,
+        index.target,
+        ((**start_value + trigger.distance.x) / SLIDER_SCALAR).clamp(-1.0, 1.0),
+    );
 
     commands
         .entity(*window)
