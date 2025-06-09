@@ -6,6 +6,7 @@
 use bevy::{
     asset::{AssetMetaCheck, load_internal_binary_asset},
     prelude::*,
+    window::WindowResolution,
 };
 use bevy_tweening::{AnimationSystem, TweeningPlugin};
 use particles::ParticlePlugin;
@@ -51,8 +52,8 @@ fn bevy_systems(app: &mut App) {
             .set(WindowPlugin {
                 primary_window: Window {
                     title: "ABIOGENESIS".into(),
-                    // #[cfg(not(target_arch = "wasm32"))]
-                    // resolution: WindowResolution::new(1920.0, 1080.0),
+                    // // #[cfg(not(target_arch = "wasm32"))]
+                    // resolution: WindowResolution::new(2.0 * 362.0, 688.0),
                     fit_canvas_to_parent: true,
                     ..default()
                 }

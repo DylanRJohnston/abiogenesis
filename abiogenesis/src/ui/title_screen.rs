@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use bevy_tweening::{Animator, Delay, Sequence, Tween, TweenCompleted};
 
 use crate::{
+    math::remap,
     observe::observe,
     ui::{lenses::TextColourLens, respawn_ui},
 };
@@ -20,18 +21,28 @@ impl Plugin for TitleScreenPlugin {
     feature = "hot_reload",
     bevy_simple_subsecond_system::hot(rerun_on_hot_patch = false)
 )]
-fn spawn_title_screen(mut commands: Commands, title_screens: Query<Entity, With<TitleScreen>>) {
+fn spawn_title_screen(
+    mut commands: Commands,
+    title_screens: Query<Entity, With<TitleScreen>>,
+    window: Single<&Window>,
+    ui_scale: Res<UiScale>,
+) {
     title_screens
         .iter()
         .for_each(|entity| commands.entity(entity).despawn());
 
-    commands.spawn(title_screen());
+    tracing::info!(width = ?window.width(), ?ui_scale);
+
+    commands.spawn(title_screen(
+        remap(window.width(), 362.0, 1280.0, 40., 100.).min(100.),
+        remap(window.width(), 362.0, 1280.0, 16., 20.).min(20.),
+    ));
 }
 
 #[derive(Component)]
 struct TitleScreen;
 
-fn title_screen() -> impl Bundle {
+fn title_screen(title_size: f32, subtitle_size: f32) -> impl Bundle {
     (
         TitleScreen,
         Node {
@@ -39,6 +50,7 @@ fn title_screen() -> impl Bundle {
             height: Val::Percent(100.0),
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
+            padding: UiRect::axes(Val::Px(24.0), Val::default()),
             ..default()
         },
         children![(
@@ -48,9 +60,8 @@ fn title_screen() -> impl Bundle {
             },
             children![
                 (
-                    Node::default(),
                     Text::from("A B I O G E N E S I S"),
-                    TextFont::from_font_size(100.0),
+                    TextFont::from_font_size(title_size),
                     TextColor(Color::WHITE.with_alpha(0.0)),
                     Animator::new(
                         Sequence::from_single(Tween::new(
@@ -98,7 +109,7 @@ fn title_screen() -> impl Bundle {
                     Text::from(
                         "abiogenesis. noun. abio·​gen·​e·​sis : the origin of life from nonliving matter"
                     ),
-                    TextFont::from_font_size(20.0),
+                    TextFont::from_font_size(subtitle_size),
                     TextColor(Color::WHITE.with_alpha(0.0)),
                     Animator::new(
                         Sequence::from_single(Delay::new(Duration::from_secs_f32(2.0)))

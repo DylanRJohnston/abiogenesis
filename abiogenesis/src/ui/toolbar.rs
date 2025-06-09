@@ -398,7 +398,7 @@ pub fn smite_end_hover(
 
 #[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
 pub fn smite_end_touch(
-    _trigger: Trigger<Pointer<Cancel>>,
+    _trigger: Trigger<Pointer<Click>>,
     hover_region: Query<Entity, With<HoverRegion>>,
     mut commands: Commands,
 ) {

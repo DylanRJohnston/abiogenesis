@@ -4,7 +4,23 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-bevy = { version = "0.16" }
+bevy = { version = "0.16", default-features = false, features = [
+  "bevy_asset",
+  "bevy_color",
+  "bevy_core_pipeline",
+  "bevy_log",
+  "bevy_pbr",
+  "bevy_picking",
+  "bevy_render",
+  "bevy_ui_picking_backend",
+  "bevy_ui",
+  "bevy_window",
+  "bevy_winit",
+  "multi_threaded",
+  "png",
+  "std",
+  "webgl2",
+] }
 rand = "0.8"
 log = { version = "0.4", features = [
   "max_level_debug",

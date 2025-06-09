@@ -3,7 +3,7 @@ use bevy::{prelude::*, window::SystemCursorIcon, winit::cursor::CursorIcon};
 use crate::observe::observe;
 
 pub fn mixin() -> impl Bundle {
-    (observe(hover_start), observe(hover_end))
+    (observe(hover_start), observe(hover_end), observe(touch_end))
 }
 
 fn hover_start(
@@ -18,6 +18,16 @@ fn hover_start(
 
 fn hover_end(
     _trigger: Trigger<Pointer<Out>>,
+    window: Single<Entity, With<Window>>,
+    mut commands: Commands,
+) {
+    commands
+        .entity(*window)
+        .insert(CursorIcon::from(SystemCursorIcon::Default));
+}
+
+fn touch_end(
+    _trigger: Trigger<Pointer<Click>>,
     window: Single<Entity, With<Window>>,
     mut commands: Commands,
 ) {

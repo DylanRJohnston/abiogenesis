@@ -7,7 +7,7 @@ pub fn tooltip(text: impl Into<String>) -> impl Bundle {
         observe(tooltip_hover_start(text.into())),
         observe(tooltip_hover),
         observe(tooltip_hover_end),
-        observe(tooltip_click_end),
+        observe(tooltip_touch_end),
     )
 }
 
@@ -65,7 +65,7 @@ fn tooltip_hover_end(
         .for_each(|tooltip| commands.entity(tooltip).despawn());
 }
 
-fn tooltip_click_end(
+fn tooltip_touch_end(
     _: Trigger<Pointer<Click>>,
     tooltips: Query<Entity, With<Tooltip>>,
     mut commands: Commands,
