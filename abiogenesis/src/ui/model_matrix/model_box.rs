@@ -66,8 +66,9 @@ fn drag_start(
         return;
     };
 
-    commands.entity(trigger.target).insert(DragStartValue(
-        SLIDER_SCALAR * model.weight(index.source, index.target),
+    commands.entity(trigger.target).insert((
+        DragStartValue(SLIDER_SCALAR * model.weight(index.source, index.target)),
+        GlobalZIndex(50),
     ));
 }
 
@@ -133,5 +134,6 @@ fn drag_end(
     commands
         .entity(trigger.target)
         .insert(Animator::new(tween))
-        .remove::<DragStartValue>();
+        .remove::<DragStartValue>()
+        .remove::<GlobalZIndex>();
 }

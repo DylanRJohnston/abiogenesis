@@ -19,7 +19,7 @@ pub struct SimulationPlugin;
 impl Plugin for SimulationPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<SimulationParams>()
-            .insert_resource(PRESETS[0].2)
+            .insert_resource(PRESETS[0].3)
             .add_systems(Update, compute_forces.in_set(AppSystems::Update));
     }
 }

@@ -86,6 +86,7 @@ fn title_screen(title_size: f32, subtitle_size: f32) -> impl Bundle {
                     Title,
                     Text::from("A B I O G E N E S I S"),
                     TextFont::from_font_size(title_size),
+                    TextLayout::new_with_linebreak(LineBreak::NoWrap),
                     TextColor(Color::WHITE.with_alpha(0.0)),
                     Animator::new(
                         Sequence::from_single(Tween::new(

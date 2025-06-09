@@ -5,6 +5,7 @@ use crate::{
     particles::{
         model::{Model, NUM_PRESETS, PRESETS},
         simulation::SimulationParams,
+        spawner::{Respawn, SpawnerConfig},
     },
     ui::{
         colours::UI_BACKGROUND_FOCUSED,
@@ -41,7 +42,7 @@ fn contents() -> impl Bundle {
             ..default()
         },
         Children::spawn(SpawnIter(PRESETS.clone().into_iter().map(
-            |(name, model, params)| {
+            |(name, model, spawner_config, params)| {
                 (
                     Node {
                         padding: UiRect::axes(Val::Px(8.0), Val::Px(VERTICAL_PADDING)),
@@ -64,6 +65,11 @@ fn contents() -> impl Bundle {
 
                             *res_model = model.clone();
                             *res_params = params.clone();
+
+                            if spawner_config != SpawnerConfig::None {
+                                commands.insert_resource(spawner_config.clone());
+                                commands.trigger(Respawn);
+                            }
                         }
                     }),
                 )

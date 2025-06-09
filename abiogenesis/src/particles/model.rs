@@ -1,5 +1,6 @@
 use std::sync::LazyLock;
 
+use bevy::math::Rect;
 use bevy::prelude::*;
 use rand::Rng;
 use rand_distr::{Distribution, Normal};
@@ -12,101 +13,140 @@ use crate::particles::{
         ATTRACTION_RADIUS_RANGE, FORCE_STRENGTH_RANGE, FRICTION_RANGE,
         PEAK_ATTRACTION_RADIUS_RANGE, REPULSION_RADIUS_RANGE, SimulationParams,
     },
+    spawner::{SpawnShape, SpawnerConfig},
 };
 
-pub const NUM_PRESETS: usize = 8;
-pub const PRESETS: LazyLock<[(&str, Model, SimulationParams); NUM_PRESETS]> = LazyLock::new(|| {
-    [
-        (
-            "The First Garden",
-            Model::from_3x3([[0.3, 0.4, 0.5], [0.7, -0.4, 0.3], [-0.5, 0.5, 0.0]]),
-            SimulationParams {
-                num_colours: 3,
-                ..SimulationParams::DEFAULT
-            },
-        ),
-        (
-            "Circle of Life",
-            Model::from_3x3([[-0.2, 0.2, 0.8], [0.0, 0.7, 0.3], [0.6, 0.3, -0.5]]),
-            SimulationParams {
-                num_colours: 3,
-                ..SimulationParams::DEFAULT
-            },
-        ),
-        (
-            "Jörmungandr",
-            Model::from_3x3([[-0.8, 0.7, 0.7], [0.7, -0.8, 0.7], [0.3, 0.7, -0.8]]),
-            SimulationParams {
-                friction: 2.5,
-                force_strength: 100.0,
-                attraction_radius: 120.0,
-                peak_attraction_radius: 80.0,
-                repulsion_radius: 20.0,
-                decay_rate: 80.0,
-                num_colours: 3,
-                ..SimulationParams::DEFAULT
-            },
-        ),
-        (
-            "Predation",
-            Model::from_3x3([[0.9, -0.8, -0.9], [-0.1, 0.9, -0.4], [0.6, 0.8, -0.5]]),
-            SimulationParams {
-                friction: 2.5,
-                force_strength: 80.0,
-                attraction_radius: 100.0,
-                peak_attraction_radius: 20.0,
-                repulsion_radius: 40.0,
-                decay_rate: 80.0,
-                num_colours: 3,
-                ..SimulationParams::DEFAULT
-            },
-        ),
-        (
-            "Endless Chase",
-            Model::from_3x3([[1.0, 0.2, 0.0], [0.0, 1.0, 0.2], [0.2, 0.0, 1.0]]),
-            SimulationParams {
-                num_colours: 3,
-                ..SimulationParams::DEFAULT
-            },
-        ),
-        (
-            "The Trinity",
-            Model::from_3x3([[0.3, 0.4, 0.5], [0.7, -0.4, 0.3], [-0.5, 0.5, 0.0]]),
-            SimulationParams {
-                friction: 5.0,
-                force_strength: 180.0,
-                attraction_radius: 200.0,
-                peak_attraction_radius: 120.0,
-                repulsion_radius: 110.0,
-                decay_rate: 60.0,
-                num_colours: 3,
-                ..SimulationParams::DEFAULT
-            },
-        ),
-        (
-            "Divine Engine",
-            Model::from_3x3([[-0.1, 0.7, 0.0], [0.0, -0.1, 0.7], [0.7, 0.0, -0.1]]),
-            SimulationParams {
-                friction: 5.0,
-                force_strength: 120.,
-                attraction_radius: 200.0,
-                peak_attraction_radius: 120.0,
-                repulsion_radius: 40.0,
-                decay_rate: 100.0,
-                num_colours: 3,
-                ..SimulationParams::DEFAULT
-            },
-        ),
-        (
-            "Heat Death",
-            Model::from_3x3([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]),
-            SimulationParams {
-                num_colours: 3,
-                ..SimulationParams::DEFAULT
-            },
-        ),
-    ]
-});
+pub const NUM_PRESETS: usize = 9;
+pub const PRESETS: LazyLock<[(&str, Model, SpawnerConfig, SimulationParams); NUM_PRESETS]> =
+    LazyLock::new(|| {
+        [
+            (
+                "The First Garden",
+                Model::from_3x3([[0.3, 0.4, 0.5], [0.7, -0.4, 0.3], [-0.5, 0.5, 0.0]]),
+                SpawnerConfig::None,
+                SimulationParams {
+                    num_colours: 3,
+                    ..SimulationParams::DEFAULT
+                },
+            ),
+            (
+                "Circle of Life",
+                Model::from_3x3([[-0.2, 0.2, 0.8], [0.0, 0.7, 0.3], [0.6, 0.3, -0.5]]),
+                SpawnerConfig::None,
+                SimulationParams {
+                    num_colours: 3,
+                    ..SimulationParams::DEFAULT
+                },
+            ),
+            (
+                "Jörmungandr",
+                Model::from_3x3([[-0.8, 0.7, 0.7], [0.7, -0.8, 0.7], [0.3, 0.7, -0.8]]),
+                SpawnerConfig::None,
+                SimulationParams {
+                    friction: 2.5,
+                    force_strength: 100.0,
+                    attraction_radius: 120.0,
+                    peak_attraction_radius: 80.0,
+                    repulsion_radius: 20.0,
+                    decay_rate: 80.0,
+                    num_colours: 3,
+                    ..SimulationParams::DEFAULT
+                },
+            ),
+            (
+                "Rainbow Serpent",
+                Model::from_6x6([
+                    [-0.8, 0.7, 0.7, 0.0, 0.0, 0.0],
+                    [0.7, -0.8, 0.7, 0.0, 0.0, 0.0],
+                    [0.0, 0.7, -0.8, 0.7, 0.0, 0.0],
+                    [0.0, 0.0, 0.7, -0.8, 0.7, 0.0],
+                    [0.0, 0.0, 0.0, 0.7, -0.8, 0.7],
+                    [0.7, 0.0, 0.0, 0.0, 0.7, -0.8],
+                ]),
+                SpawnerConfig::None,
+                SimulationParams {
+                    friction: 2.5,
+                    force_strength: 100.0,
+                    attraction_radius: 120.0,
+                    peak_attraction_radius: 80.0,
+                    repulsion_radius: 20.0,
+                    decay_rate: 80.0,
+                    num_colours: 6,
+                    ..SimulationParams::DEFAULT
+                },
+            ),
+            (
+                "Predation",
+                Model::from_3x3([[0.9, -0.8, -0.9], [-0.1, 0.9, -0.4], [0.6, 0.8, -0.5]]),
+                SpawnerConfig::None,
+                SimulationParams {
+                    friction: 2.5,
+                    force_strength: 80.0,
+                    attraction_radius: 100.0,
+                    peak_attraction_radius: 20.0,
+                    repulsion_radius: 40.0,
+                    decay_rate: 80.0,
+                    num_colours: 3,
+                    ..SimulationParams::DEFAULT
+                },
+            ),
+            (
+                "Ouroboros",
+                Model::from_6x6([
+                    [1.0, 0.4, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.4, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 1.0, 0.4, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0, 0.4, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 1.0, 0.4],
+                    [0.4, 0.0, 0.0, 0.0, 0.0, 1.0],
+                ]),
+                SpawnerConfig::None,
+                SimulationParams {
+                    num_colours: 6,
+                    ..SimulationParams::DEFAULT
+                },
+            ),
+            (
+                "The Trinity",
+                Model::from_3x3([[0.3, 0.4, 0.5], [0.7, -0.4, 0.3], [-0.5, 0.5, 0.0]]),
+                SpawnerConfig::None,
+                SimulationParams {
+                    friction: 5.0,
+                    force_strength: 180.0,
+                    attraction_radius: 200.0,
+                    peak_attraction_radius: 120.0,
+                    repulsion_radius: 110.0,
+                    decay_rate: 60.0,
+                    num_colours: 3,
+                    ..SimulationParams::DEFAULT
+                },
+            ),
+            (
+                "Divine Engine",
+                Model::from_3x3([[-0.1, 0.7, 0.0], [0.0, -0.1, 0.7], [0.7, 0.0, -0.1]]),
+                SpawnerConfig::None,
+                SimulationParams {
+                    friction: 5.0,
+                    force_strength: 120.,
+                    attraction_radius: 200.0,
+                    peak_attraction_radius: 120.0,
+                    repulsion_radius: 40.0,
+                    decay_rate: 100.0,
+                    num_colours: 3,
+                    ..SimulationParams::DEFAULT
+                },
+            ),
+            (
+                "Heat Death",
+                Model::from_3x3([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]),
+                SpawnerConfig::None,
+                SimulationParams {
+                    num_colours: 3,
+                    ..SimulationParams::DEFAULT
+                },
+            ),
+        ]
+    });
 
 pub struct ModelPlugin;
 impl Plugin for ModelPlugin {
@@ -134,6 +174,16 @@ impl Model {
                 .into_iter()
                 .flat_map(|row| row.into_iter().chain((3..NUM_COLOURS).map(|_| 0.0)))
                 .chain((3..NUM_COLOURS).flat_map(|_| (0..NUM_COLOURS).map(|_| 0.0)))
+                .collect(),
+        }
+    }
+
+    pub fn from_6x6(weights: [[f32; 6]; 6]) -> Self {
+        Self {
+            weights: weights
+                .into_iter()
+                .flat_map(|row| row.into_iter().chain((6..NUM_COLOURS).map(|_| 0.0)))
+                .chain((6..NUM_COLOURS).flat_map(|_| (0..NUM_COLOURS).map(|_| 0.0)))
                 .collect(),
         }
     }
@@ -198,22 +248,22 @@ fn randomise_model(
         1.0..=(params.force_strength / *FORCE_STRENGTH_RANGE.end()) * FRICTION_RANGE.end(),
     );
 
-    params.attraction_radius = Normal::<f32>::new(75.0, 25.0)
+    params.attraction_radius = Normal::<f32>::new(100.0, 10.0)
         .unwrap()
         .sample(&mut rng)
         .clamp(20.0, *ATTRACTION_RADIUS_RANGE.end());
 
     params.peak_attraction_radius = Normal::<f32>::new(
-        params.attraction_radius * 0.6,
-        params.attraction_radius * 0.5,
+        params.attraction_radius * 0.66,
+        params.attraction_radius * 0.1,
     )
     .unwrap()
     .sample(&mut rng)
     .clamp(0.0, *PEAK_ATTRACTION_RADIUS_RANGE.end());
 
     params.repulsion_radius = Normal::<f32>::new(
-        params.attraction_radius * 0.4,
-        params.attraction_radius * 0.3,
+        params.attraction_radius * 0.33,
+        params.attraction_radius * 0.1,
     )
     .unwrap()
     .sample(&mut rng)

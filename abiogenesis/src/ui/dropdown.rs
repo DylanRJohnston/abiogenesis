@@ -43,7 +43,7 @@ pub fn dropdown(
         Node {
             flex_direction: FlexDirection::Column,
             width: Val::Percent(100.0),
-            overflow: Overflow::clip(),
+            overflow: Overflow::clip_y(),
             height: Val::Px(HEADER_HEIGHT + HEADER_PADDING * 2.0),
             // grid_column: GridPlacement::start_span(1, 3),
             ..default()

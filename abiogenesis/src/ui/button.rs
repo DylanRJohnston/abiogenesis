@@ -10,7 +10,7 @@ use crate::{
 
 pub fn control_button(
     text: &'static str,
-    event: impl Event + Copy,
+    event: impl Event + Clone,
     icon: Handle<Image>,
 ) -> impl Bundle {
     (
@@ -43,7 +43,7 @@ pub fn control_button(
         mixins::hover_colour(UI_BACKGROUND, UI_BACKGROUND_FOCUSED),
         mixins::tooltip(text),
         observe(move |_: Trigger<Pointer<Click>>, mut commands: Commands| {
-            commands.trigger(event);
+            commands.trigger(event.clone());
         }),
     )
 }

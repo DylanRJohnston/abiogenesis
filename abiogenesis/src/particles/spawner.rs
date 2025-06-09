@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use rand_distr::uniform;
 
 use crate::particles::{
     colour::*,
@@ -11,6 +12,7 @@ pub struct SpawnerPlugin;
 impl Plugin for SpawnerPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SpawnParticle>()
+            .insert_resource(SpawnerConfig::Uniform)
             .insert_resource(OldestParticle::default())
             .add_systems(Startup, (init_assets, spawn_particles_on_startup).chain())
             .add_systems(Update, spawn_particle)
@@ -19,7 +21,7 @@ impl Plugin for SpawnerPlugin {
     }
 }
 
-#[derive(Debug, Event, Clone, Copy, Reflect)]
+#[derive(Debug, Event, Clone)]
 pub struct Respawn;
 
 #[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
@@ -75,6 +77,60 @@ fn init_assets(
     });
 }
 
+#[derive(Debug, Clone, Resource, Default, PartialEq)]
+pub enum SpawnerConfig {
+    None,
+    #[default]
+    Uniform,
+    Custom(Vec<(ParticleColour, SpawnShape)>),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum SpawnShape {
+    Rect(Rect),
+    Circle {
+        position: Vec2,
+        radius: f32,
+    },
+    HollowCircle {
+        position: Vec2,
+        inner_radius: f32,
+        outer_radius: f32,
+    },
+}
+
+impl SpawnShape {
+    pub fn transform(&self) -> Transform {
+        match self {
+            SpawnShape::Rect(rect) => Transform::from_xyz(
+                rect.min.x + (rect.max.x - rect.min.x) * rand::random::<f32>(),
+                rect.min.y + (rect.max.y - rect.min.y) * rand::random::<f32>(),
+                0.0,
+            ),
+            SpawnShape::Circle { position, radius } => {
+                let angle = 2.0 * std::f32::consts::PI * rand::random::<f32>();
+                let x = position.x + radius * angle.cos();
+                let y = position.y + radius * angle.sin();
+
+                Transform::from_xyz(x, y, 0.0)
+            }
+            SpawnShape::HollowCircle {
+                position,
+                inner_radius,
+                outer_radius,
+            } => {
+                let angle = 2.0 * std::f32::consts::PI * rand::random::<f32>();
+                let radius = inner_radius + (outer_radius - inner_radius) * rand::random::<f32>();
+
+                let x = position.x + radius * angle.cos();
+                let y = position.y + radius * angle.sin();
+
+                Transform::from_xyz(x, y, 0.0)
+            }
+        }
+    }
+}
+
 #[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
 fn respawn_particles(
     _trigger: Trigger<Respawn>,
@@ -84,6 +140,7 @@ fn respawn_particles(
     particles: Query<Entity, With<Particle>>,
     particle_assets: Res<ParticleAssets>,
     mut params: ResMut<SimulationParams>,
+    spawner_config: Res<SpawnerConfig>,
 ) -> Result<()> {
     params.decay_rate = 80.0;
 
@@ -98,12 +155,25 @@ fn respawn_particles(
 
     particle_indexes.clear();
 
-    let transform = move || {
-        Transform::from_xyz(
+    let transform = move |color: ParticleColour| match &*spawner_config {
+        SpawnerConfig::None | SpawnerConfig::Uniform => Transform::from_xyz(
             width * (rand::random::<f32>() - 0.5),
             height * (rand::random::<f32>() - 0.5),
             0.0,
-        )
+        ),
+        SpawnerConfig::Custom(items) => {
+            for (inner_colour, shape) in items {
+                if color == *inner_colour {
+                    return shape.transform();
+                }
+            }
+
+            Transform::from_xyz(
+                width * (rand::random::<f32>() - 0.5),
+                height * (rand::random::<f32>() - 0.5),
+                0.0,
+            )
+        }
     };
 
     (0..MAX_PARTICLES).for_each(|i| {
@@ -119,7 +189,7 @@ fn respawn_particles(
 
         commands.spawn((
             Particle,
-            transform(),
+            transform(color),
             color,
             Mesh2d(particle_assets.mesh.clone()),
         ));
