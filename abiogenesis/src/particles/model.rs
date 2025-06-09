@@ -19,10 +19,7 @@ pub const PRESETS: LazyLock<[(&str, Model, SimulationParams); NUM_PRESETS]> = La
     [
         (
             "The First Garden",
-            Model::from_3x3(
-                [[0.3, 0.4, 0.5], [0.7, -0.4, 0.3], [-0.5, 0.5, 0.0]],
-                NUM_COLOURS,
-            ),
+            Model::from_3x3([[0.3, 0.4, 0.5], [0.7, -0.4, 0.3], [-0.5, 0.5, 0.0]]),
             SimulationParams {
                 num_colours: 3,
                 ..SimulationParams::DEFAULT
@@ -30,10 +27,7 @@ pub const PRESETS: LazyLock<[(&str, Model, SimulationParams); NUM_PRESETS]> = La
         ),
         (
             "Circle of Life",
-            Model::from_3x3(
-                [[-0.2, 0.2, 0.8], [0.0, 0.7, 0.3], [0.6, 0.3, -0.5]],
-                NUM_COLOURS,
-            ),
+            Model::from_3x3([[-0.2, 0.2, 0.8], [0.0, 0.7, 0.3], [0.6, 0.3, -0.5]]),
             SimulationParams {
                 num_colours: 3,
                 ..SimulationParams::DEFAULT
@@ -41,10 +35,7 @@ pub const PRESETS: LazyLock<[(&str, Model, SimulationParams); NUM_PRESETS]> = La
         ),
         (
             "Jörmungandr",
-            Model::from_3x3(
-                [[-0.8, 0.7, 0.7], [0.7, -0.8, 0.7], [0.3, 0.7, -0.8]],
-                NUM_COLOURS,
-            ),
+            Model::from_3x3([[-0.8, 0.7, 0.7], [0.7, -0.8, 0.7], [0.3, 0.7, -0.8]]),
             SimulationParams {
                 friction: 2.5,
                 force_strength: 100.0,
@@ -58,10 +49,7 @@ pub const PRESETS: LazyLock<[(&str, Model, SimulationParams); NUM_PRESETS]> = La
         ),
         (
             "Predation",
-            Model::from_3x3(
-                [[0.9, -0.8, -0.9], [-0.1, 0.9, -0.4], [0.6, 0.8, -0.5]],
-                NUM_COLOURS,
-            ),
+            Model::from_3x3([[0.9, -0.8, -0.9], [-0.1, 0.9, -0.4], [0.6, 0.8, -0.5]]),
             SimulationParams {
                 friction: 2.5,
                 force_strength: 80.0,
@@ -75,10 +63,7 @@ pub const PRESETS: LazyLock<[(&str, Model, SimulationParams); NUM_PRESETS]> = La
         ),
         (
             "Endless Chase",
-            Model::from_3x3(
-                [[1.0, 0.2, 0.0], [0.0, 1.0, 0.2], [0.2, 0.0, 1.0]],
-                NUM_COLOURS,
-            ),
+            Model::from_3x3([[1.0, 0.2, 0.0], [0.0, 1.0, 0.2], [0.2, 0.0, 1.0]]),
             SimulationParams {
                 num_colours: 3,
                 ..SimulationParams::DEFAULT
@@ -86,10 +71,7 @@ pub const PRESETS: LazyLock<[(&str, Model, SimulationParams); NUM_PRESETS]> = La
         ),
         (
             "The Trinity",
-            Model::from_3x3(
-                [[0.3, 0.4, 0.5], [0.7, -0.4, 0.3], [-0.5, 0.5, 0.0]],
-                NUM_COLOURS,
-            ),
+            Model::from_3x3([[0.3, 0.4, 0.5], [0.7, -0.4, 0.3], [-0.5, 0.5, 0.0]]),
             SimulationParams {
                 friction: 5.0,
                 force_strength: 180.0,
@@ -103,10 +85,7 @@ pub const PRESETS: LazyLock<[(&str, Model, SimulationParams); NUM_PRESETS]> = La
         ),
         (
             "Divine Engine",
-            Model::from_3x3(
-                [[-0.1, 0.7, 0.0], [0.0, -0.1, 0.7], [0.7, 0.0, -0.1]],
-                NUM_COLOURS,
-            ),
+            Model::from_3x3([[-0.1, 0.7, 0.0], [0.0, -0.1, 0.7], [0.7, 0.0, -0.1]]),
             SimulationParams {
                 friction: 5.0,
                 force_strength: 120.,
@@ -120,10 +99,7 @@ pub const PRESETS: LazyLock<[(&str, Model, SimulationParams); NUM_PRESETS]> = La
         ),
         (
             "Heat Death",
-            Model::from_3x3(
-                [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
-                NUM_COLOURS,
-            ),
+            Model::from_3x3([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]),
             SimulationParams {
                 num_colours: 3,
                 ..SimulationParams::DEFAULT
@@ -149,41 +125,39 @@ pub struct Model {
         deserialize_with = "model_deserializer"
     )]
     weights: Vec<f32>,
-    num_colours: usize,
 }
 
 impl Model {
-    pub fn from_3x3(weights: [[f32; 3]; 3], num_colours: usize) -> Self {
+    pub fn from_3x3(weights: [[f32; 3]; 3]) -> Self {
         Self {
             weights: weights
                 .into_iter()
-                .flat_map(|row| row.into_iter().chain((3..num_colours).map(|_| 0.0)))
-                .chain((3..num_colours).flat_map(|_| (0..num_colours).map(|_| 0.0)))
+                .flat_map(|row| row.into_iter().chain((3..NUM_COLOURS).map(|_| 0.0)))
+                .chain((3..NUM_COLOURS).flat_map(|_| (0..NUM_COLOURS).map(|_| 0.0)))
                 .collect(),
-            num_colours: num_colours,
         }
     }
 
     pub fn weight(&self, source: ParticleColour, target: ParticleColour) -> f32 {
         debug_assert!(
-            source.index() < self.num_colours && target.index() < self.num_colours,
+            source.index() < NUM_COLOURS && target.index() < NUM_COLOURS,
             "Invalid particle colour index: source: {}, target: {}",
             source,
             target
         );
 
-        self.weights[source.index() * self.num_colours + target.index()]
+        self.weights[source.index() * NUM_COLOURS + target.index()]
     }
 
     pub fn set_weight(&mut self, source: ParticleColour, target: ParticleColour, value: f32) {
         debug_assert!(
-            source.index() < self.num_colours && target.index() < self.num_colours,
+            source.index() < NUM_COLOURS && target.index() < NUM_COLOURS,
             "Invalid particle colour index: source: {}, target: {}",
             source,
             target
         );
 
-        self.weights[source.index() * self.num_colours + target.index()] = value;
+        self.weights[source.index() * NUM_COLOURS + target.index()] = value;
     }
 }
 
