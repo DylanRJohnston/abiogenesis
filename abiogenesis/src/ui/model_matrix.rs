@@ -2,9 +2,11 @@ use bevy::{ecs::spawn::SpawnWith, prelude::*};
 
 mod circle;
 mod model_box;
+mod num_colours;
 
 use circle::*;
 use model_box::*;
+use num_colours::*;
 
 use crate::particles::{
     colour::{ParticleColour::*, *},
@@ -70,7 +72,7 @@ pub fn model_matrix() -> impl Bundle {
         },
         // children![] has a maximum limit of children
         many_children!(
-            Node::default(),
+            num_colours(),
             circle(Red),
             circle(Green),
             circle(Blue),

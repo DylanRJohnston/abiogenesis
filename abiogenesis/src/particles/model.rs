@@ -1,8 +1,6 @@
-use core::num;
 use std::sync::LazyLock;
 
 use bevy::prelude::*;
-use itertools::Itertools;
 use rand::Rng;
 use rand_distr::{Distribution, Normal};
 use serde::{Deserialize, Deserializer, Serialize, Serializer, ser::SerializeSeq};
@@ -25,7 +23,10 @@ pub const PRESETS: LazyLock<[(&str, Model, SimulationParams); NUM_PRESETS]> = La
                 [[0.3, 0.4, 0.5], [0.7, -0.4, 0.3], [-0.5, 0.5, 0.0]],
                 NUM_COLOURS,
             ),
-            SimulationParams::DEFAULT,
+            SimulationParams {
+                num_colours: 3,
+                ..SimulationParams::DEFAULT
+            },
         ),
         (
             "Circle of Life",
@@ -33,7 +34,10 @@ pub const PRESETS: LazyLock<[(&str, Model, SimulationParams); NUM_PRESETS]> = La
                 [[-0.2, 0.2, 0.8], [0.0, 0.7, 0.3], [0.6, 0.3, -0.5]],
                 NUM_COLOURS,
             ),
-            SimulationParams::DEFAULT,
+            SimulationParams {
+                num_colours: 3,
+                ..SimulationParams::DEFAULT
+            },
         ),
         (
             "Jörmungandr",
@@ -48,6 +52,7 @@ pub const PRESETS: LazyLock<[(&str, Model, SimulationParams); NUM_PRESETS]> = La
                 peak_attraction_radius: 80.0,
                 repulsion_radius: 20.0,
                 decay_rate: 80.0,
+                num_colours: 3,
                 ..SimulationParams::DEFAULT
             },
         ),
@@ -64,6 +69,7 @@ pub const PRESETS: LazyLock<[(&str, Model, SimulationParams); NUM_PRESETS]> = La
                 peak_attraction_radius: 20.0,
                 repulsion_radius: 40.0,
                 decay_rate: 80.0,
+                num_colours: 3,
                 ..SimulationParams::DEFAULT
             },
         ),
@@ -73,7 +79,10 @@ pub const PRESETS: LazyLock<[(&str, Model, SimulationParams); NUM_PRESETS]> = La
                 [[1.0, 0.2, 0.0], [0.0, 1.0, 0.2], [0.2, 0.0, 1.0]],
                 NUM_COLOURS,
             ),
-            SimulationParams::DEFAULT,
+            SimulationParams {
+                num_colours: 3,
+                ..SimulationParams::DEFAULT
+            },
         ),
         (
             "The Trinity",
@@ -88,6 +97,7 @@ pub const PRESETS: LazyLock<[(&str, Model, SimulationParams); NUM_PRESETS]> = La
                 peak_attraction_radius: 120.0,
                 repulsion_radius: 110.0,
                 decay_rate: 60.0,
+                num_colours: 3,
                 ..SimulationParams::DEFAULT
             },
         ),
@@ -104,6 +114,7 @@ pub const PRESETS: LazyLock<[(&str, Model, SimulationParams); NUM_PRESETS]> = La
                 peak_attraction_radius: 120.0,
                 repulsion_radius: 40.0,
                 decay_rate: 100.0,
+                num_colours: 3,
                 ..SimulationParams::DEFAULT
             },
         ),
@@ -113,7 +124,10 @@ pub const PRESETS: LazyLock<[(&str, Model, SimulationParams); NUM_PRESETS]> = La
                 [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
                 NUM_COLOURS,
             ),
-            SimulationParams::DEFAULT,
+            SimulationParams {
+                num_colours: 3,
+                ..SimulationParams::DEFAULT
+            },
         ),
     ]
 });

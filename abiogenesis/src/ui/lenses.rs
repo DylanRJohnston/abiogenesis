@@ -67,3 +67,26 @@ impl Lens<TextColor> for TextColourLens {
         ***target = self.start.mix(&self.end, ratio);
     }
 }
+
+pub struct WidthLens {
+    pub start: f32,
+    pub end: f32,
+}
+
+impl Lens<Node> for WidthLens {
+    fn lerp(&mut self, target: &mut dyn Targetable<Node>, ratio: f32) {
+        target.width = Val::Px(lerp(self.start, self.end, ratio));
+    }
+}
+
+pub struct SizeLens {
+    pub start: f32,
+    pub end: f32,
+}
+
+impl Lens<Node> for SizeLens {
+    fn lerp(&mut self, target: &mut dyn Targetable<Node>, ratio: f32) {
+        target.width = Val::Px(lerp(self.start, self.end, ratio));
+        target.height = Val::Px(lerp(self.start, self.end, ratio));
+    }
+}

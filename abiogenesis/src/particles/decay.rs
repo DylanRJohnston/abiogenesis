@@ -70,7 +70,6 @@ fn particle_decay(
             ),
             Velocity::default(),
             colour,
-            MeshMaterial2d(particle_assets.material(colour)),
         ));
 
         count += 1;

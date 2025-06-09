@@ -1,7 +1,14 @@
-use bevy::prelude::*;
+use bevy::{
+    ecs::{component::HookContext, world::DeferredWorld},
+    prelude::*,
+};
 use rand::Rng;
 
+use crate::particles::spawner::ParticleAssets;
+
 #[derive(Debug, Reflect, Component, Default, Clone, Copy, PartialEq, Eq)]
+#[require(MeshMaterial2d<ColorMaterial>)]
+#[component(immutable, on_insert = on_insert)]
 pub enum ParticleColour {
     #[default]
     Red,
@@ -10,6 +17,16 @@ pub enum ParticleColour {
     Orange,
     Pink,
     Aqua,
+}
+
+fn on_insert(mut world: DeferredWorld, ctx: HookContext) {
+    let colour = world.get::<ParticleColour>(ctx.entity).unwrap();
+    let materials = world.get_resource::<ParticleAssets>().unwrap();
+
+    world
+        .get_mut::<MeshMaterial2d<ColorMaterial>>(ctx.entity)
+        .unwrap()
+        .0 = materials.material(*colour);
 }
 
 pub const NUM_COLOURS: usize = 6;
@@ -56,6 +73,18 @@ impl ParticleColour {
             ParticleColour::Orange => 3,
             ParticleColour::Pink => 4,
             ParticleColour::Aqua => 5,
+        }
+    }
+
+    pub fn from_index(index: usize) -> Self {
+        match index {
+            0 => ParticleColour::Red,
+            1 => ParticleColour::Green,
+            2 => ParticleColour::Blue,
+            3 => ParticleColour::Orange,
+            4 => ParticleColour::Pink,
+            5 => ParticleColour::Aqua,
+            _ => unreachable!(),
         }
     }
 

@@ -17,7 +17,7 @@ impl Plugin for ParticlePlugin {
 
 #[derive(Debug, Reflect, Component)]
 #[require(Transform, ParticleColour, Velocity)]
-#[component(on_add = on_add, on_remove = on_remove)]
+#[component(immutable, on_add = on_add, on_remove = on_remove)]
 pub struct Particle;
 
 #[derive(Debug, Reflect, Component, Default, Clone, Copy, Deref, DerefMut)]

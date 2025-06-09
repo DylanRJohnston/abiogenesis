@@ -4,7 +4,7 @@ use bevy::{
 };
 
 #[derive(Debug, Component, Deref)]
-#[component(on_insert = load_icon)]
+#[component(immutable, on_insert = load_icon)]
 pub struct Icon(pub &'static str);
 
 fn load_icon(mut world: DeferredWorld, ctx: HookContext) {

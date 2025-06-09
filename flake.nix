@@ -69,7 +69,7 @@
           set -o nounset
           set -x
 
-          rm -rf target/aarch64-apple-darwin/debug/deps/abiogenesis*
+          cargo clean --target-dir target/aarch64-apple-darwin -p abiogenesis    
           BEVY_ASSET_ROOT="abiogenesis" dx serve --hot-patch --package abiogenesis --no-default-features --features hot_reload $@
         '';
       in

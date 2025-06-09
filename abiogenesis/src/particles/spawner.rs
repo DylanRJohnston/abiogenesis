@@ -14,6 +14,7 @@ impl Plugin for SpawnerPlugin {
             .insert_resource(OldestParticle::default())
             .add_systems(Startup, (init_assets, spawn_particles_on_startup).chain())
             .add_systems(Update, spawn_particle)
+            .add_systems(Update, update_colours_on_num_change)
             .add_observer(respawn_particles);
     }
 }
@@ -121,7 +122,6 @@ fn respawn_particles(
             transform(),
             color,
             Mesh2d(particle_assets.mesh.clone()),
-            MeshMaterial2d(particle_assets.material(color)),
         ));
     });
 
@@ -155,7 +155,6 @@ fn spawn_particle(
                 Transform::from_translation(position.extend(0.0)),
                 Velocity::default(),
                 *color,
-                MeshMaterial2d(particle_assets.material(*color)),
             ));
 
             **oldest_particle = (**oldest_particle + 1) % particle_index.len();
@@ -165,10 +164,35 @@ fn spawn_particle(
                 Transform::from_translation(position.extend(0.0)),
                 *color,
                 Mesh2d(particle_assets.mesh.clone()),
-                MeshMaterial2d(particle_assets.material(*color)),
             ));
         }
     }
 
     Ok(())
+}
+
+#[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
+fn update_colours_on_num_change(
+    params: Res<SimulationParams>,
+    mut prev_num: Local<usize>,
+    particles: Query<Entity, With<Particle>>,
+    mut commands: Commands,
+) {
+    if !params.is_changed() {
+        return;
+    }
+
+    if params.num_colours == *prev_num {
+        return;
+    }
+
+    *prev_num = params.num_colours;
+
+    commands.insert_batch(
+        particles
+            .iter()
+            .map(|particle| (particle, ParticleColour::random(params.num_colours)))
+            // insert_batch requires Send + Send + 'static, so we can't hold onto the particles query
+            .collect::<Vec<_>>(),
+    );
 }
