@@ -35,19 +35,23 @@ fn tooltip_bundle(text: String, position: Vec2) -> impl Bundle {
     )
 }
 
-fn tooltip_hover_start(text: String) -> impl Fn(Trigger<Pointer<Over>>, Commands) {
-    move |trigger, mut commands| {
+fn tooltip_hover_start(text: String) -> impl Fn(Trigger<Pointer<Over>>, Commands, Res<UiScale>) {
+    move |trigger, mut commands, ui_scale| {
         commands.spawn(tooltip_bundle(
             text.clone(),
-            trigger.pointer_location.position,
+            trigger.pointer_location.position / **ui_scale,
         ));
     }
 }
 
-fn tooltip_hover(trigger: Trigger<Pointer<Move>>, mut tooltips: Query<&mut Node, With<Tooltip>>) {
+fn tooltip_hover(
+    trigger: Trigger<Pointer<Move>>,
+    mut tooltips: Query<&mut Node, With<Tooltip>>,
+    ui_scale: Res<UiScale>,
+) {
     tooltips.iter_mut().for_each(|mut tooltip| {
-        tooltip.top = Val::Px(trigger.pointer_location.position.y);
-        tooltip.left = Val::Px(trigger.pointer_location.position.x);
+        tooltip.top = Val::Px(trigger.pointer_location.position.y / **ui_scale);
+        tooltip.left = Val::Px(trigger.pointer_location.position.x / **ui_scale);
     });
 }
 

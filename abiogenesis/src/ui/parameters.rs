@@ -18,17 +18,21 @@ const ROW_GAP: f32 = 8.0;
 const HEIGHT: f32 =
     NUM_SLIDERS * slider::COMPONENT_SIZE + ROW_GAP * (NUM_SLIDERS + 1.0) + MODEL_MATRIX_SIZE;
 
-pub fn parameters() -> impl Bundle {
+pub fn parameters(num_colours: usize) -> impl Bundle {
     (dropdown(
         Icon("icons/balance.png"),
         "Laws of Creation",
         HEIGHT,
-        content(),
+        content(num_colours),
     ),)
 }
 
-fn content() -> impl Bundle {
+#[derive(Component)]
+pub struct Parameters;
+
+fn content(num_colours: usize) -> impl Bundle {
     (
+        Parameters,
         Node {
             width: Val::Percent(100.0),
             flex_direction: FlexDirection::Column,
@@ -39,7 +43,7 @@ fn content() -> impl Bundle {
             ..default()
         },
         children![
-            model_matrix(),
+            model_matrix(num_colours),
             Slider {
                 name: "Friction",
                 range: FRICTION_RANGE,

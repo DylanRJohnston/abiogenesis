@@ -9,6 +9,7 @@ use crate::{
     observe::observe,
     particles::{
         model::{ClearParticles, Randomise},
+        simulation::SimulationParams,
         spawner::Respawn,
     },
     systems::AppSystems,
@@ -17,7 +18,7 @@ use crate::{
         examples::examples,
         lenses::{LeftLens, LensPlugin},
         menu_button::{hide_ui, show_ui_button},
-        model_matrix::update_model_matrix,
+        model_matrix::{update_matrix_size, update_model_matrix},
         parameters::parameters,
         title_screen::TitleScreenPlugin,
         toolbar::ToolBarPlugin,
@@ -47,6 +48,7 @@ impl Plugin for UIPlugin {
             .add_plugins(LensPlugin)
             .add_plugins(TitleScreenPlugin)
             .add_systems(Update, update_model_matrix.in_set(AppSystems::Update))
+            .add_systems(Update, update_matrix_size.in_set(AppSystems::Update))
             .add_systems(PreUpdate, calculate_ui_scale);
     }
 }
@@ -60,7 +62,7 @@ fn calculate_ui_scale(
     mut ui_scale: ResMut<UiScale>,
 ) {
     if let Some(e) = resize_reader.read().last() {
-        ui_scale.0 = e.height / 720.;
+        ui_scale.0 = e.height / 800.;
     }
 }
 
@@ -73,6 +75,7 @@ pub struct UIRoot;
 )]
 pub fn respawn_ui(
     mut commands: Commands,
+    params: Res<SimulationParams>,
     icons: Res<AssetServer>,
     roots: Query<Entity, With<UIRoot>>,
 ) {
@@ -105,7 +108,7 @@ pub fn respawn_ui(
                     },
                     children![
                         examples(),
-                        parameters(),
+                        parameters(params.num_colours),
                         (
                             Node {
                                 width: Val::Percent(100.0),
@@ -161,7 +164,7 @@ fn full_screen_container() -> impl Bundle {
         observe(toolbar::smite_start_hover),
         observe(toolbar::smite_hover),
         observe(toolbar::smite_end_hover),
-        observe(toolbar::smite_end_click),
+        observe(toolbar::smite_end_touch),
     )
 }
 

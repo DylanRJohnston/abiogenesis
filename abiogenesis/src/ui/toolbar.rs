@@ -222,8 +222,6 @@ fn update_toolbar_select(
     selection: Single<Entity, With<Selection>>,
     mut commands: Commands,
 ) -> Result<()> {
-    tracing::info!("updating toolbar select");
-
     trigger.propagate(false);
 
     let start = selected_tool.index() as f32 * TOOL_SIZE;
@@ -247,7 +245,7 @@ fn update_toolbar_on_colour_change(
     params: Res<SimulationParams>,
     toolbar_entity: Single<Entity, With<ToolBar>>,
     tools: Query<(Entity, &Tool)>,
-    mut selected_tool: ResMut<Tool>,
+    selected_tool: Res<Tool>,
     mut prev_num: Local<usize>,
     mut commands: Commands,
 ) {
@@ -255,17 +253,9 @@ fn update_toolbar_on_colour_change(
         return;
     }
 
-    tracing::info!("simulation params changed");
-
     if params.num_colours == *prev_num {
         return;
     }
-
-    tracing::info!(
-        "number of colours changed from {} to {}",
-        *prev_num,
-        params.num_colours
-    );
 
     tools
         .iter()
@@ -307,8 +297,6 @@ fn update_toolbar_on_colour_change(
     };
 
     if prev_selected_colour.index() + 1 > params.num_colours {
-        tracing::info!("selected tool out of bounds, resetting to last colour");
-
         commands.trigger_targets(
             Tool::Particle(ParticleColour::from_index(params.num_colours - 1)),
             *toolbar_entity,
@@ -356,12 +344,17 @@ fn update_camera(
 pub struct HoverRegion;
 
 #[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
-pub fn smite_start_hover(trigger: Trigger<Pointer<Over>>, tool: Res<Tool>, mut commands: Commands) {
+pub fn smite_start_hover(
+    trigger: Trigger<Pointer<Over>>,
+    tool: Res<Tool>,
+    mut commands: Commands,
+    ui_scale: Res<UiScale>,
+) {
     if Tool::Smite != *tool {
         return;
     };
 
-    let position = trigger.pointer_location.position - Vec2::new(30., 30.);
+    let position = (trigger.pointer_location.position) / **ui_scale - Vec2::new(30., 30.);
 
     commands.spawn((
         HoverRegion,
@@ -371,10 +364,11 @@ pub fn smite_start_hover(trigger: Trigger<Pointer<Over>>, tool: Res<Tool>, mut c
             height: Val::Px(60.),
             left: Val::Px(position.x),
             top: Val::Px(position.y),
+            border: UiRect::all(Val::Px(2.0)),
             ..default()
         },
+        BorderColor(Color::from(WHITE).with_alpha(0.05)),
         GlobalZIndex(-100),
-        BackgroundColor(Color::from(WHITE).with_alpha(0.05)),
         BorderRadius::all(Val::Percent(50.)),
     ));
 }
@@ -383,8 +377,9 @@ pub fn smite_start_hover(trigger: Trigger<Pointer<Over>>, tool: Res<Tool>, mut c
 pub fn smite_hover(
     trigger: Trigger<Pointer<Move>>,
     mut hover_region: Single<&mut Node, With<HoverRegion>>,
+    ui_scale: Res<UiScale>,
 ) {
-    let position = trigger.pointer_location.position - Vec2::new(30., 30.);
+    let position = (trigger.pointer_location.position) / **ui_scale - Vec2::new(30., 30.);
 
     hover_region.top = Val::Px(position.y);
     hover_region.left = Val::Px(position.x);
@@ -402,8 +397,8 @@ pub fn smite_end_hover(
 }
 
 #[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
-pub fn smite_end_click(
-    _trigger: Trigger<Pointer<Pressed>>,
+pub fn smite_end_touch(
+    _trigger: Trigger<Pointer<Cancel>>,
     hover_region: Query<Entity, With<HoverRegion>>,
     mut commands: Commands,
 ) {

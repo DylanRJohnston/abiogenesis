@@ -6,7 +6,7 @@ use crate::{
     ui::{colours::UI_BACKGROUND_FOCUSED, mixins},
 };
 
-pub fn num_colours() -> impl Bundle {
+pub fn change_num_colours() -> impl Bundle {
     (
         Node {
             flex_direction: FlexDirection::Row,

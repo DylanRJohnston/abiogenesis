@@ -119,7 +119,7 @@ pub const PRESETS: LazyLock<[(&str, Model, SimulationParams); NUM_PRESETS]> = La
             },
         ),
         (
-            "Heath Death",
+            "Heat Death",
             Model::from_3x3(
                 [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
                 NUM_COLOURS,
