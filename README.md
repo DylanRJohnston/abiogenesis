@@ -1,4 +1,4 @@
-# A B I O G E N E S I S
+![](./logo.png)
 A Particle Life Sandbox, and my entry into [Bevy Jam #6](https://itch.io/jam/bevy-jam-6/rate/3610690).
 
 Explore the rich emergent behavior from simple rules and build your own organisms to compete for mass.
