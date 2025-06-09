@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, window::WindowResized};
 use bevy_tweening::{Animator, Delay, Sequence, Tween, TweenCompleted};
 
 use crate::{
@@ -13,7 +13,8 @@ pub struct TitleScreenPlugin;
 
 impl Plugin for TitleScreenPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_title_screen);
+        app.add_systems(Startup, spawn_title_screen)
+            .add_systems(Update, calculate_ui_scale);
     }
 }
 
@@ -31,12 +32,34 @@ fn spawn_title_screen(
         .iter()
         .for_each(|entity| commands.entity(entity).despawn());
 
-    tracing::info!(width = ?window.width(), ?ui_scale);
+    tracing::warn!(width = ?window.width(), ?ui_scale);
 
     commands.spawn(title_screen(
         remap(window.width(), 362.0, 1280.0, 40., 100.).min(100.),
         remap(window.width(), 362.0, 1280.0, 16., 20.).min(20.),
     ));
+}
+
+#[derive(Component)]
+struct Title;
+
+#[derive(Component)]
+struct SubTitle;
+
+#[cfg_attr(
+    feature = "hot_reload",
+    bevy_simple_subsecond_system::hot(rerun_on_hot_patch = true)
+)]
+fn calculate_ui_scale(
+    mut resize_reader: EventReader<WindowResized>,
+    window: Single<&Window>,
+    mut title: Single<&mut TextFont, (With<Title>, Without<SubTitle>)>,
+    mut subtitle: Single<&mut TextFont, (With<SubTitle>, Without<Title>)>,
+) {
+    if let Some(_) = resize_reader.read().last() {
+        title.font_size = remap(window.width(), 362.0, 1280.0, 40., 100.).min(100.);
+        subtitle.font_size = remap(window.width(), 362.0, 1280.0, 16., 20.).min(20.);
+    }
 }
 
 #[derive(Component)]
@@ -60,6 +83,7 @@ fn title_screen(title_size: f32, subtitle_size: f32) -> impl Bundle {
             },
             children![
                 (
+                    Title,
                     Text::from("A B I O G E N E S I S"),
                     TextFont::from_font_size(title_size),
                     TextColor(Color::WHITE.with_alpha(0.0)),
@@ -102,6 +126,7 @@ fn title_screen(title_size: f32, subtitle_size: f32) -> impl Bundle {
                     )
                 ),
                 (
+                    SubTitle,
                     Node {
                         justify_self: JustifySelf::Start,
                         ..default()
