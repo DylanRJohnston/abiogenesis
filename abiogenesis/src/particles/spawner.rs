@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use rand_distr::uniform;
 
 use crate::particles::{
     colour::*,
@@ -82,10 +81,12 @@ pub enum SpawnerConfig {
     None,
     #[default]
     Uniform,
+    #[allow(dead_code)]
     Custom(Vec<(ParticleColour, SpawnShape)>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
+#[allow(dead_code)]
 pub enum SpawnShape {
     Rect(Rect),
     Circle {

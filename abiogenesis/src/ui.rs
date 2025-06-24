@@ -26,7 +26,6 @@ use crate::{
 };
 
 mod button;
-mod challenges;
 mod colours;
 mod dropdown;
 mod examples;

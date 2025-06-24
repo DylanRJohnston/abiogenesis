@@ -13,11 +13,7 @@ use num_colours::*;
 
 use crate::{
     math::remap,
-    particles::{
-        colour::{ParticleColour::*, *},
-        model::Model,
-        simulation::SimulationParams,
-    },
+    particles::{colour::*, model::Model, simulation::SimulationParams},
     ui::parameters::Parameters,
 };
 
@@ -52,16 +48,6 @@ pub fn update_model_matrix(
             *colour = MID_COLOR.mix(&GREEN, value.powf(0.5)).into();
         }
     }
-}
-
-macro_rules! many_children {
-    ($($x:expr),* $(,)?) => {
-        Children::spawn(SpawnWith(|spawner: &mut ChildSpawner| {
-            $(
-                spawner.spawn($x);
-            )*
-        }))
-    };
 }
 
 pub const MODEL_MATRIX_SIZE: f32 = 200.0;

@@ -20,6 +20,7 @@ bevy = { version = "0.16", default-features = false, features = [
   "png",
   "std",
   "webgl2",
+  "shader_format_wesl"
 ] }
 rand = "0.8"
 log = { version = "0.4", features = [
@@ -38,6 +39,7 @@ bevy_tweening = { version = "0.13.0", default-features = false, features = [
 itertools = "0.14.0"
 rand_distr = "0.4.3"
 serde = { version = "1.0.219", features = ["derive"] }
+wgpu-types = "24.0.0"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = { version = "0.2.100" }

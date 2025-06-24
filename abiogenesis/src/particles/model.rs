@@ -1,6 +1,5 @@
 use std::sync::LazyLock;
 
-use bevy::math::Rect;
 use bevy::prelude::*;
 use rand::Rng;
 use rand_distr::{Distribution, Normal};
@@ -13,7 +12,7 @@ use crate::particles::{
         ATTRACTION_RADIUS_RANGE, FORCE_STRENGTH_RANGE, FRICTION_RANGE,
         PEAK_ATTRACTION_RADIUS_RANGE, REPULSION_RADIUS_RANGE, SimulationParams,
     },
-    spawner::{SpawnShape, SpawnerConfig},
+    spawner::SpawnerConfig,
 };
 
 pub const NUM_PRESETS: usize = 9;
