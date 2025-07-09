@@ -15,11 +15,19 @@ pub struct SimulationSize<'w> {
     // projection: Single<'w, &'static Projection>,
 }
 
+const HEIGHT: f32 = 4.0 * 1080.0;
+const WIDTH: f32 = 4.0 * 1920.0;
+
 impl SimulationSize<'_> {
     pub fn dimensions(&self) -> Vec2 {
-        let (width, height) = (self.window.width(), self.window.height());
+        // let (width, height) = (self.window.width(), self.window.height());
 
-        Vec2::new(width.max(1920.0), height.max(1080.0))
+        // Vec2::new(width.max(1920.0), height.max(1080.0))
+        return Vec2::new(WIDTH, HEIGHT);
+    }
+
+    pub fn as_rect(&self) -> Rect {
+        Rect::from_center_size(Vec2::ZERO, self.dimensions())
     }
 
     pub fn scale_bounds(&self) -> (f32, f32) {
@@ -37,7 +45,7 @@ fn resize_simulation(mut spatial_index: ResMut<SpatialIndex>, simulation_size: S
 // Allows zooming out until you hit the screen edges
 fn scale_bounds(screen_width: f32, screen_height: f32) -> (f32, f32) {
     let (simulation_width, simulation_height) =
-        (screen_width.max(1920.0), screen_height.max(1080.0));
+        (screen_width.max(WIDTH), screen_height.max(HEIGHT));
 
     (
         0.1,

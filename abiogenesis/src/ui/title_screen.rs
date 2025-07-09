@@ -33,11 +33,12 @@ fn spawn_title_screen(
         .for_each(|entity| commands.entity(entity).despawn());
 
     tracing::warn!(width = ?window.width(), ?ui_scale);
+    commands.run_system_cached(respawn_ui);
 
-    commands.spawn(title_screen(
-        remap(window.width(), 362.0, 1280.0, 40., 100.).min(100.),
-        remap(window.width(), 362.0, 1280.0, 16., 20.).min(20.),
-    ));
+    // commands.spawn(title_screen(
+    //     remap(window.width(), 362.0, 1280.0, 40., 100.).min(100.),
+    //     remap(window.width(), 362.0, 1280.0, 16., 20.).min(20.),
+    // ));
 }
 
 #[derive(Component)]

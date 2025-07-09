@@ -78,7 +78,11 @@ impl Plugin for ParticleRenderPlugin {
 #[derive(Debug, Clone, Copy, Component)]
 struct FPSCounter;
 
-fn setup_camera(mut commands: Commands) {
+fn setup_camera(mut commands: Commands, camera_query: Query<Entity, With<Camera>>) {
+    camera_query.iter().for_each(|entity| {
+        commands.entity(entity).despawn();
+    });
+
     // Add a 2D camera to render to
     commands.spawn((
         Camera2d,
@@ -94,6 +98,7 @@ fn setup_camera(mut commands: Commands) {
 
     commands.spawn((
         Node {
+            margin: UiRect::left(Val::Auto),
             padding: UiRect::all(Val::Px(16.0)),
             ..default()
         },

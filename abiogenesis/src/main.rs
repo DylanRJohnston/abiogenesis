@@ -96,10 +96,10 @@ fn third_party_systems(app: &mut App) {
 
 fn app_systems(app: &mut App) {
     app.add_plugins((
-        // ParticlePlugin,
-        // UIPlugin,
+        ParticlePlugin,
+        UIPlugin,
         // CameraPlugin,
-        // ControlsPlugin,
+        ControlsPlugin,
         // BrowserStatePlugin,
         ComputeShaderPlugin,
         ParticleRenderPlugin,

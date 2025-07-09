@@ -19,7 +19,13 @@ fn random_float(seed: u32) -> f32 {
 }
 
 fn clamp_length(value: vec2<f32>, min: f32, max: f32) -> vec2<f32> {
-    return clamp(length(value), min, max) * normalize(value);
+    let len = length(value);
+
+    if len == 0.0 {
+        return vec2f(0.0);
+    } else {
+        return value * clamp(len, min, max) / len;
+    }
 }
 
 fn lerp(a: f32, b: f32, t: f32) -> f32 {
@@ -80,4 +86,9 @@ fn toroidal_wrap(bounds: Rect, pos: vec2f) -> vec2f {
         wrapped_x + bounds.min.x,
         wrapped_y + bounds.min.y
     );
+}
+
+fn safe_normalize(v: vec2<f32>) -> vec2<f32> {
+    let len = length(v);
+    return select(v / len, vec2f(0.0), len == 0.0);
 }

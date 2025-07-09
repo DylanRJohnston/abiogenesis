@@ -2,7 +2,7 @@
 #import utils::math::{
     lcg, random_float, remap,
     toroidal_displacement, toroidal_wrap,
-    Rect, clamp_length
+    Rect, clamp_length, safe_normalize
 }
 #import bevy_render::view::View
 #import bevy_render::globals::Globals
@@ -28,7 +28,11 @@ var<storage, read_write> out_position: array<vec2<f32>>;
 @group(0) @binding(6)
 var<storage, read_write> out_velocity: array<vec2<f32>>;
 
-override NUM_PARTICLES = 1024;
+override NUM_PARTICLES = 400u * 64u;
+
+override x_dim = 4.0 * 1920.0;
+override y_dim = 4.0 * 1080.0;
+
 
 @compute @workgroup_size(64)
 fn init(@builtin(global_invocation_id) id: vec3<u32>) {
@@ -37,15 +41,12 @@ fn init(@builtin(global_invocation_id) id: vec3<u32>) {
     particle_colours[index] = lcg(index) % 3;
 
     out_position[index] = vec2<f32>(
-        mix(-640.0, 640.0, random_float(index + 1283718)),
-        mix(-360.0, 360.0, random_float(index + 3879349)),
+        mix(-x_dim / 2.0, x_dim / 2.0, random_float(index + 1283718)),
+        mix(-y_dim / 2.0, y_dim / 2.0, random_float(index + 3879349)),
     );
 
     out_velocity[index] = vec2<f32>(0.0, 0.0);
 }
-
-override x_dim = 1920.0;
-override y_dim = 1080.0;
 
 override friction = 2.0;
 const model = array<f32, 9>(
@@ -59,13 +60,26 @@ fn get_model_value(a: u32, b: u32) -> f32 {
 }
 
 const BOUNDS: Rect = Rect(
-    vec2<f32>(-x_dim / 2.0, -y_dim / 2.0),
-    vec2<f32>(x_dim / 2.0, y_dim / 2.0)
+    vec2<f32>(-4.0 * 1920.0 / 2.0, -4.0 * 1080.0 / 2.0),
+    vec2<f32>(4.0 * 1920.0 / 2.0, 4.0 * 1080.0 / 2.0)
 );
 
 @compute @workgroup_size(64)
 fn update(@builtin(global_invocation_id) id: vec3<u32>) {
     let index = id.x;
+
+    var position = in_position[index];
+
+    let lower_index = u32(((globals.time - globals.delta_time) % 60.0 / 60.0) * f32(NUM_PARTICLES));
+    let upper_index = u32((globals.time % 60.0 / 60.0) * f32(NUM_PARTICLES));
+
+    if lower_index <= index && index < upper_index {
+        particle_colours[index] = lcg(index + u32(globals.time)) % 3;
+        position = vec2<f32>(
+            mix(-x_dim / 2.0, x_dim / 2.0, random_float(index + 1283718)),
+            mix(-y_dim / 2.0, y_dim / 2.0, random_float(index + 3879349)),
+        );
+    }
 
     let friction = exp(-friction * globals.delta_time);
 
@@ -74,18 +88,18 @@ fn update(@builtin(global_invocation_id) id: vec3<u32>) {
     for (var other = 0u; other < NUM_PARTICLES; other++) {
         if other == index { continue; }
 
-        let displacement = toroidal_displacement(BOUNDS, in_position[index], in_position[other]);
-        // let displacement = in_position[other] - in_position[index];
+        let displacement = toroidal_displacement(BOUNDS, position, in_position[other]);
+        // let displacement = in_position[other] - position;
 
         let magnitude = influence(get_model_value(particle_colours[index], particle_colours[other]), length(displacement));
 
-        force += 100.0 * magnitude * normalize(displacement);
+        force += 100.0 * magnitude * safe_normalize(displacement);
     }
 
-    let velocity = ((in_velocity[index] + force * globals.delta_time) * friction);
-    out_velocity[index] = velocity;
-    out_position[index] = toroidal_wrap(BOUNDS, in_position[index] + velocity * globals.delta_time);
-    // out_position[index] = in_position[index] + velocity * globals.delta_time;
+
+    let velocity = in_velocity[index] + clamp_length(force, 0.0, 1000.0) * globals.delta_time;
+    out_velocity[index] = clamp_length(velocity * friction, 0.0, 400.0);
+    out_position[index] = toroidal_wrap(BOUNDS, position + velocity * globals.delta_time);
 }
 
 override replusion_radius = 25.0;

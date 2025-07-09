@@ -9,6 +9,7 @@ use bevy::{
         Render, RenderApp, RenderSet,
         extract_resource::{ExtractResource, ExtractResourcePlugin},
         globals::{GlobalsBuffer, GlobalsUniform},
+        gpu_readback::{Readback, ReadbackComplete},
         render_asset::RenderAssets,
         render_graph::{
             NodeRunError, RenderGraphApp, RenderGraphContext, RenderLabel, ViewNode, ViewNodeRunner,
@@ -17,6 +18,7 @@ use bevy::{
             BindGroup, BindGroupEntries, BindGroupLayout, BindGroupLayoutEntries, BufferUsages,
             CachedComputePipelineId, CachedPipelineState, ComputePassDescriptor,
             ComputePipelineDescriptor, PipelineCache, PipelineCacheError, ShaderStages,
+            ValidateShader,
             binding_types::{storage_buffer_read_only_sized, storage_buffer_sized, uniform_buffer},
         },
         renderer::{RenderContext, RenderDevice},
@@ -25,9 +27,9 @@ use bevy::{
     },
 };
 
-pub const NUM_PARTICLES: usize = 1024;
+pub const NUM_PARTICLES: usize = 400 * 64;
 pub const BUFFER_SIZE: Option<NonZeroU64> =
-    NonZeroU64::new(1024 * 2 * std::mem::size_of::<f32>() as u64);
+    NonZeroU64::new(NUM_PARTICLES as u64 * 2 * std::mem::size_of::<f32>() as u64);
 pub const WORKGROUP_SIZE: usize = 64;
 pub const SHADER_ASSET_PATH: &str = "shaders/compute_shader.wgsl";
 
@@ -118,7 +120,7 @@ fn setup_buffers(mut commands: Commands, mut buffers: ResMut<Assets<ShaderStorag
     // commands
     //     .spawn(Readback::buffer(positions_a))
     //     .observe(|trigger: Trigger<ReadbackComplete>| {
-    //         tracing::info!(data = ?trigger.event().to_shader_type::<Vec<f32>>(), "Buffer A Readback complete");
+    //         tracing::info!(data = ?trigger.event().to_shader_type::<Vec<f32>>()[100], "Buffer A Readback complete");
     //     });
 
     // commands
@@ -200,6 +202,9 @@ impl FromWorld for ParticleLifePipeline {
             ),
         );
         let shader = world.load_asset(SHADER_ASSET_PATH);
+
+        tracing::info!(id = ?shader.id(), path = ?shader.path());
+
         let pipeline_cache = world.resource::<PipelineCache>();
         let init_pipeline = pipeline_cache.queue_compute_pipeline(ComputePipelineDescriptor {
             label: None,
