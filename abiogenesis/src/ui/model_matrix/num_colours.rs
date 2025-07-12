@@ -1,4 +1,4 @@
-use bevy::{prelude::*, text::FontStyle};
+use bevy::prelude::*;
 
 use crate::{
     observe::observe,

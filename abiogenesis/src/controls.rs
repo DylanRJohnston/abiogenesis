@@ -1,3 +1,4 @@
+use crate::math::TorodialMath;
 use std::{cmp::Ordering, time::Duration};
 
 use bevy::prelude::*;
@@ -149,8 +150,9 @@ pub fn select_follow_particle(
 #[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]
 pub fn drag_screen(
     trigger: Trigger<Pointer<Drag>>,
-    mut particles: Query<&mut Transform, With<Particle>>,
+    mut camera_transform: Single<&mut Transform, With<Camera>>,
     projection: Single<&Projection>,
+    bounds: SimulationSize,
     mut commands: Commands,
 ) {
     if !matches!(trigger.button, PointerButton::Secondary) {
@@ -167,9 +169,11 @@ pub fn drag_screen(
     delta.y *= -1.0;
     delta *= project.scale;
 
-    for mut particle in &mut particles {
-        particle.translation += delta.extend(0.0);
-    }
+    // Move the camera instead of all particles
+    camera_transform.translation = bounds
+        .as_rect()
+        .toroidal_wrap(camera_transform.translation.truncate() - delta)
+        .extend(0.0);
 }
 
 #[cfg_attr(feature = "hot_reload", bevy_simple_subsecond_system::hot)]

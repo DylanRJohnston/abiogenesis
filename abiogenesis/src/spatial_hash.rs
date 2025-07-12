@@ -1,5 +1,4 @@
 use bevy::math::{Rect, Vec2};
-use itertools::Itertools;
 
 #[derive(Debug, Clone)]
 pub struct SpatialHashGrid<T> {

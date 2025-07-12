@@ -6,25 +6,25 @@
 use bevy::{
     asset::{AssetMetaCheck, load_internal_binary_asset},
     prelude::*,
-    window::WindowResolution,
 };
 use bevy_tweening::{AnimationSystem, TweeningPlugin};
 use particles::ParticlePlugin;
 use ui::UIPlugin;
 
 use crate::{
-    browser_state::BrowserStatePlugin, camera::CameraPlugin, controls::ControlsPlugin,
-    scenes::ScenePlugin, systems::AppSystems,
+    browser_state::BrowserStatePlugin, camera::CameraPlugin, compute_shader::ComputeShaderPlugin,
+    controls::ControlsPlugin, render_particles::ParticleRenderPlugin, systems::AppSystems,
 };
 
 mod browser_state;
 mod bundle_fn;
 mod camera;
+mod compute_shader;
 mod controls;
 mod math;
 mod observe;
 mod particles;
-mod scenes;
+mod render_particles;
 mod spatial_hash;
 mod systems;
 mod ui;
@@ -71,8 +71,8 @@ fn bevy_systems(app: &mut App) {
 
     #[cfg(all(debug_assertions, not(feature = "hot_reload")))]
     app.edit_schedule(Update, |schedule| {
-        schedule.set_build_settings(ScheduleBuildSettings {
-            ambiguity_detection: LogLevel::Warn,
+        schedule.set_build_settings(bevy::ecs::schedule::ScheduleBuildSettings {
+            ambiguity_detection: bevy::ecs::schedule::LogLevel::Warn,
             ..default()
         });
     });
@@ -98,10 +98,11 @@ fn app_systems(app: &mut App) {
     app.add_plugins((
         ParticlePlugin,
         UIPlugin,
-        ScenePlugin,
-        CameraPlugin,
+        // CameraPlugin,
         ControlsPlugin,
-        BrowserStatePlugin,
+        // BrowserStatePlugin,
+        ComputeShaderPlugin,
+        ParticleRenderPlugin,
     ));
 
     app.configure_sets(

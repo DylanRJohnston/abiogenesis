@@ -21,11 +21,11 @@ impl Plugin for ParticlePlugin {
         app.add_plugins((
             particle::ParticlePlugin,
             ModelPlugin,
-            DecayPlugin,
+            // DecayPlugin,
             SimulationPlugin,
-            SimulationSizePlugin,
-            SpatialIndexPlugin,
-            SpawnerPlugin,
+            // SimulationSizePlugin,
+            // SpatialIndexPlugin,
+            // SpawnerPlugin,
         ));
     }
 }

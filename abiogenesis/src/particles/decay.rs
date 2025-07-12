@@ -7,7 +7,7 @@ use crate::{
         particle::{ParticleIndex, Velocity},
         simulation::SimulationParams,
         size::SimulationSize,
-        spawner::{OldestParticle, ParticleAssets},
+        spawner::OldestParticle,
     },
 };
 
@@ -29,7 +29,6 @@ fn particle_decay(
     follow_particle: Option<Res<FollowParticle>>,
     params: Res<SimulationParams>,
     mut commands: Commands,
-    particle_assets: Res<ParticleAssets>,
 ) -> Result<()> {
     let Vec2 {
         x: width,

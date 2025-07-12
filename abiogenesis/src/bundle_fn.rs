@@ -5,9 +5,9 @@ use bevy::prelude::*;
 pub trait Thunk: FnOnce(&mut EntityWorldMut) + Send + Sync + 'static {}
 impl<F: FnOnce(&mut EntityWorldMut) + Send + Sync + 'static> Thunk for F {}
 
-pub struct BundleFn<F: Thunk>(pub F);
+pub struct BundleFn<T: Thunk>(pub T);
 
-unsafe impl<F: Thunk> Bundle for BundleFn<F> {
+unsafe impl<T: Thunk> Bundle for BundleFn<T> {
     fn component_ids(_: &mut ComponentsRegistrator, _: &mut impl FnMut(ComponentId)) {}
 
     fn get_component_ids(_: &Components, _: &mut impl FnMut(Option<ComponentId>)) {}
@@ -15,8 +15,8 @@ unsafe impl<F: Thunk> Bundle for BundleFn<F> {
     fn register_required_components(_: &mut ComponentsRegistrator, _: &mut RequiredComponents) {}
 }
 
-impl<F: Thunk> DynamicBundle for BundleFn<F> {
-    type Effect = BundleFn<F>;
+impl<T: Thunk> DynamicBundle for BundleFn<T> {
+    type Effect = BundleFn<T>;
 
     fn get_components(
         self,
@@ -26,7 +26,7 @@ impl<F: Thunk> DynamicBundle for BundleFn<F> {
     }
 }
 
-impl<F: Thunk> BundleEffect for BundleFn<F> {
+impl<T: Thunk> BundleEffect for BundleFn<T> {
     fn apply(self, entity: &mut EntityWorldMut) {
         (self.0)(entity);
     }
