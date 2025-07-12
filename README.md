@@ -3,9 +3,6 @@ A Particle Life Sandbox, and my entry into [Bevy Jam #6](https://itch.io/jam/bev
 
 Explore the rich emergent behavior from simple rules and build your own organisms to compete for mass.
 
-## Rate my Game
-Voting for [Bevy Jam #6](https://itch.io/jam/bevy-jam-6/rate/3610690) is now open, if you'd take a minute to rate my game and check out the other excellent entries that would be greatly appreciated.
-
 ## Controls
 ### Mouse
 * **Use Selected Tool:** Left Click
